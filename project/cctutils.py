@@ -8,39 +8,6 @@ from abc import abstractmethod, ABCMeta  # 构建接口和抽象类
 from baseutils import length, normalize_locally
 
 
-class Magnet(metaclass=ABCMeta):
-    """
-    接口：表示一个可以求磁场的对象，如 CCT 类即实现了此接口
-    所有实现此接口的类，可以计算出它在某一点的磁场
-
-    本类（接口）只有一个接口方法
-    """
-
-    @abstractmethod
-    def magnetic_field_at(self, point: ndarray) -> ndarray:
-        """
-        获得本对象 self 在点 point 处的磁场
-        param point 三维笛卡尔坐标系中的点，即一个三维矢量，如 [0,0,0]
-        return 本对象 self 在点 point 处的磁场，用三维矢量表示
-        """
-        pass
-
-    def magnetic_field_along(self, line: ndarray) -> ndarray:
-        """
-        计算本对象在三维曲线 line 上的磁场分布
-        param line 由离散点组成的三维曲线，即三维矢量的数组，如 [[0,0,0], [1,0,0], [2,0,0]]
-        return 本对象在三维曲线 line 上的磁场分布，用三维矢量的数组表示
-        """
-        length = line.shape[0]  # 曲线离散点数
-        fields = empty((length, 3), dtype=float64)  # 提前开辟空间
-        for i in range(length):
-            fields[i, :] = self.magnetic_field_at(line[i, :])
-        return fields
-
-
-class Plotable():
-    pass
-
 
 class QS(Magnet, Plotable):
     """

@@ -2,6 +2,7 @@
 测试 numpy 中对象、函数的是否使用正确
 """
 
+from baseutils import Equal
 import unittest
 import numpy as np
 
@@ -49,6 +50,11 @@ class NdArrayTest(unittest.TestCase):
         arr[0, 0] = 1.  # 修改主体
         arr_2 = arr[0, :]  # 再次获取切片
         self.assertTrue(arr_1[0] == arr_2[0])
+
+    def test_numpy_inner(self):
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        self.assertTrue(Equal.equal_float(np.inner(a1, a2), 4 + 10 + 18))
 
 
 if __name__ == "__main__":
