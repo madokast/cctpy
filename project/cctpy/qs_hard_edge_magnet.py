@@ -5,8 +5,8 @@ from typing import List, Tuple
 
 import numpy as np
 
-from abstract_classes import Magnet, Plotable, LocalCoordinateSystem
-from constant import ZERO3
+from cctpy.abstract_classes import Magnet, Plotable, LocalCoordinateSystem
+from cctpy.constant import ZERO3
 
 
 class QsHardEdgeMagnet(Magnet, Plotable):
@@ -64,13 +64,13 @@ class QsHardEdgeMagnet(Magnet, Plotable):
                 return ZERO3
             else:
                 # bx 和 by 分别是局部坐标系中 x 和 y 方向的磁场（局部坐标系中 z 方向是束流方向，不会产生磁场）
-                bx = self.gradient * y - self.second_gradient * (x * y)
+                bx = self.gradient * y + self.second_gradient * (x * y)
                 by = self.gradient * x + 0.5 * self.second_gradient * (x ** 2 - y ** 2)
 
                 # 转移到全局坐标系中
                 return bx * self.local_coordinate_system.XI + by * self.local_coordinate_system.YI
 
-    def line_and_color(self, describe=None) -> List[Tuple[np.ndarray, str]]:
+    def line_and_color(self, describe='r') -> List[Tuple[np.ndarray, str]]:
         """
         画图相关
         """

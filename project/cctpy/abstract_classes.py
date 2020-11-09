@@ -4,9 +4,10 @@
 
 import numpy as np
 from typing import List, Tuple
+import logging
 
-from baseutils import Vectors
-from constant import ORIGIN3, XI, YI, ZI
+from cctpy.baseutils import Vectors, Equal
+from cctpy.constant import ORIGIN3, XI, ZI
 
 
 class Magnet:
@@ -67,7 +68,13 @@ class LocalCoordinateSystem:
         main_direction 主朝向，默认全局坐标系 z 方向
         second_direction 次朝向，默认全局坐标系 x 方向
         """
-        self.location = location.copy()  # 局部坐标系，原心
+        Equal.require_float_equal(
+            np.inner(main_direction, second_direction), 0.0,
+            f"创建 LocalCoordinateSystem 对象异常，main_direction{main_direction}和second_direction{second_direction}不正交"
+        )
+
+        # 局部坐标系，原心
+        self.location = location.copy()
 
         # 局部坐标系的 x y z 三方向
         self.ZI = Vectors.normalize_self(main_direction.copy())
@@ -104,6 +111,16 @@ class LocalCoordinateSystem:
         self.ZI = Vectors.normalize_self(main_direction.copy())
         self.XI = Vectors.normalize_self(second_direction.copy())
         self.YI = np.cross(self.ZI, self.XI)
+
+    @staticmethod
+    def create_by_y_and_z_direction(location: np.ndarray, y_direction: np.ndarray, z_direction: np.ndarray):
+        Equal.require_float_equal(
+            np.inner(y_direction, z_direction), 0.0,
+            f"创建 LocalCoordinateSystem 对象异常，y_direction{y_direction}和z_direction{z_direction}不正交"
+        )
+
+        x_direction = np.cross(y_direction, z_direction)
+        return LocalCoordinateSystem(location, z_direction, x_direction)
 
 
 class Plotable:

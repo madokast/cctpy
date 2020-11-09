@@ -2,10 +2,9 @@
 CCT 工具类
 """
 
-from constant import ZERO3, ZI
-from numpy import ndarray, empty, float64, inner, cross
-from abc import abstractmethod, ABCMeta  # 构建接口和抽象类
-from baseutils import length, normalize_locally
+from cctpy.constant import ZERO3, ZI
+from numpy import ndarray, inner, cross
+from cctpy.baseutils import length, normalize_locally
 
 
 

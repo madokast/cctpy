@@ -2,7 +2,7 @@
 测试 numpy 中对象、函数的是否使用正确
 """
 
-from baseutils import Equal
+from cctpy.baseutils import Equal, Vectors
 import unittest
 import numpy as np
 
@@ -52,10 +52,79 @@ class NdArrayTest(unittest.TestCase):
         self.assertTrue(arr_1[0] == arr_2[0])
 
     def test_numpy_inner(self):
+        """
+        内积测试 矢量叉乘
+        Returns
+        -------
+
+        """
         a1 = np.array([1, 2, 3])
         a2 = np.array([4, 5, 6])
         self.assertTrue(Equal.equal_float(np.inner(a1, a2), 4 + 10 + 18))
 
+    def test_broadcast(self):
+        """
+        广播测试
+        Returns
+        -------
+
+        """
+        a1 = np.array([
+            [1, 1, 0],
+            [2, 2, 0]
+        ])
+
+        a2 = np.array([
+            [0, 0, 5]
+        ])
+
+        a3 = np.array([
+            [1, 1, 5],
+            [2, 2, 5]
+        ])
+
+        self.assertTrue((a1 + a2 == a3).all())
+
+    def test_add_update(self):
+        """
+        += 测试
+        Returns
+        -------
+
+        """
+        arr = np.array([1, 2, 3], dtype=np.float64)
+
+        id_1 = id(arr)
+
+        arr += np.array([1, 1, 1], dtype=np.float64)
+
+        id_2 = id(arr)
+
+        self.assertEqual(id_1, id_2)
+
+        Equal.equal_vector(
+            arr,
+            np.array([2, 3, 4], dtype=np.float64)
+        )
+
+    def test_minus(self):
+        """
+        负号测试
+        Returns
+        -------
+
+        """
+        for ignore in range(10):
+            a = np.random.randn(3)
+            b = np.empty(3)
+            b[0] = -a[0]
+            b[1] = -a[1]
+            b[2] = -a[2]
+            self.assertTrue(Equal.equal_vector(-a, b))
+
+    def test_power(self):
+        self.assertTrue(Equal.equal_float(1.1 ** 50, 117.39085287969579))
+
 
 if __name__ == "__main__":
-    unittest.main(verbosity=1)
+    unittest.main(verbosity=2)

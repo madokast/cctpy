@@ -1,4 +1,4 @@
-from project.baseutils import Vectors, Equal
+from cctpy.baseutils import Vectors, Equal
 import unittest
 import numpy as np
 
