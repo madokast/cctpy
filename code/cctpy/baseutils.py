@@ -121,6 +121,7 @@ class Vectors:
 
 class Stream:
     """
+    对象流，实质是链表 list
     为了链式调用
     """
 
@@ -132,6 +133,17 @@ class Stream:
         return Stream(np.linspace(start, end, number).tolist())
 
     def map(self, func: Callable):
+        """
+        核心方法，元素 map
+        其实就是列表推导式，但是可以链式调用
+        Parameters
+        ----------
+        func map函数
+
+        Returns 新的流
+        -------
+
+        """
         return Stream([func(e) for e in self.__li])
 
     def to_list(self) -> List:

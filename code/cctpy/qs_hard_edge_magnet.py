@@ -74,6 +74,7 @@ class QsHardEdgeMagnet(Magnet, Plotable):
         """
         画图相关
         """
+        # 前中后三个圈
         front_circle_local = np.array([
             [self.aperture_radius * np.cos(i / 180 * np.pi),
              self.aperture_radius * np.sin(i / 180 * np.pi),
@@ -82,10 +83,12 @@ class QsHardEdgeMagnet(Magnet, Plotable):
         mid_circle_local = front_circle_local + np.array([0, 0, self.length / 2])
         back_circle_local = front_circle_local + np.array([0, 0, self.length])
 
-        front_circle = self.local_coordinate_system.line_to_local_coordinate(front_circle_local)
-        mid_circle = self.local_coordinate_system.line_to_local_coordinate(mid_circle_local)
-        back_circle = self.local_coordinate_system.line_to_local_coordinate(back_circle_local)
+        # 转到全局坐标系中
+        front_circle = self.local_coordinate_system.line_to_global_coordinate(front_circle_local)
+        mid_circle = self.local_coordinate_system.line_to_global_coordinate(mid_circle_local)
+        back_circle = self.local_coordinate_system.line_to_global_coordinate(back_circle_local)
 
+        # 画四条轴线
         axial_direction_line_0 = np.array([front_circle[0], back_circle[0]])
         axial_direction_line_1 = np.array([front_circle[90], back_circle[90]])
         axial_direction_line_2 = np.array([front_circle[180], back_circle[180]])

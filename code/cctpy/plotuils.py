@@ -62,6 +62,13 @@ class Plot2:
             plt.plot(x, y, lc[1])
 
     @staticmethod
+    def plot2d_xy(x: np.ndarray, y: np.ndarray, describe='r') -> None:
+        if not Plot2.INIT:
+            Plot2.__init()
+
+        plt.plot(x, y, describe)
+
+    @staticmethod
     def show():
         if not Plot2.INIT:
             raise RuntimeError("Plot3::请在show前调用plot3d")

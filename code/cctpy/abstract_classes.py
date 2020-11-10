@@ -4,7 +4,6 @@
 
 import numpy as np
 from typing import List, Tuple
-import logging
 
 from cctpy.baseutils import Vectors, Equal
 from cctpy.constant import ORIGIN3, XI, ZI
@@ -97,12 +96,59 @@ class LocalCoordinateSystem:
         z = np.inner(self.ZI, location_to_global_coordinate)
         return np.array([x, y, z], dtype=np.float64)
 
+    def point_to_global_coordinate(self, local_coordinate_point: np.ndarray) -> np.ndarray:
+        """
+        局部坐标系 -> 全局坐标系
+        Parameters
+        ----------
+        local_coordinate_point 局部坐标系
+
+        Returns 全局坐标系
+        -------
+
+        """
+
+        return self.location + (
+                local_coordinate_point[0] * self.XI +
+                local_coordinate_point[1] * self.YI +
+                local_coordinate_point[2] * self.ZI
+        )
+
     def line_to_local_coordinate(self, global_coordinate_line: np.ndarray) -> np.ndarray:
-        length = global_coordinate_line.shape[0]
+        """
+        全局坐标系中的 线/点集 坐标转为局部坐标系
+        线/点集，为 n*3 的矩阵，矩阵每一行代表一个点
+        Parameters
+        ----------
+        global_coordinate_line 全局坐标系中的 线/点集
+
+        Returns 转为局部坐标系
+        -------
+
+        """
+        length = global_coordinate_line.shape[0]  # 点数目
         location_line = np.empty((length, 3), dtype=np.float64)  # 提前开辟空间
         for i in range(length):
             location_line[i, :] = self.point_to_local_coordinate(global_coordinate_line[i, :])
         return location_line
+
+    def line_to_global_coordinate(self, local_coordinate_line: np.ndarray) -> np.ndarray:
+        """
+        局部坐标系中的 线/点集 坐标转为全局坐标系
+        线/点集，为 n*3 的矩阵，矩阵每一行代表一个点
+        Parameters
+        ----------
+        local_coordinate_line 局部坐标系中的 线/点集
+
+        Returns 转为全局坐标系
+        -------
+
+        """
+        length = local_coordinate_line.shape[0]  # 点数目
+        global_line = np.empty((length, 3), dtype=np.float64)  # 提前开辟空间
+        for i in range(length):
+            global_line[i, :] = self.point_to_global_coordinate(local_coordinate_line[i, :])
+        return global_line
 
     def set_location(self, location: np.ndarray):
         self.location = location.copy()
@@ -112,8 +158,23 @@ class LocalCoordinateSystem:
         self.XI = Vectors.normalize_self(second_direction.copy())
         self.YI = np.cross(self.ZI, self.XI)
 
+    def __str__(self) -> str:
+        return f"ORIGIN={self.location}, xi={self.XI}, yi={self.YI}, zi={self.ZI}"
+
     @staticmethod
     def create_by_y_and_z_direction(location: np.ndarray, y_direction: np.ndarray, z_direction: np.ndarray):
+        """
+        由 原点 location y方向 y_direction 和 z方向 z_direction 创建坐标系
+        Parameters
+        ----------
+        location 原点
+        y_direction y方向
+        z_direction z方向
+
+        Returns 坐标系
+        -------
+
+        """
         Equal.require_float_equal(
             np.inner(y_direction, z_direction), 0.0,
             f"创建 LocalCoordinateSystem 对象异常，y_direction{y_direction}和z_direction{z_direction}不正交"
@@ -121,6 +182,16 @@ class LocalCoordinateSystem:
 
         x_direction = np.cross(y_direction, z_direction)
         return LocalCoordinateSystem(location, z_direction, x_direction)
+
+    @staticmethod
+    def global_coordinate_system():
+        """
+        获取全局坐标系
+        Returns 全局坐标系
+        -------
+
+        """
+        return LocalCoordinateSystem()
 
 
 class Plotable:
