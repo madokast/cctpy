@@ -76,6 +76,48 @@ class SoleLayerCctCase(unittest.TestCase):
 
             Plot2.show()
 
+    def test_solenoid_float32(self):
+        """
+        测试螺线管磁场
+        Returns
+        -------
+
+        """
+        winding_num = 20
+
+        r = 10 * MM
+
+        length = 0.1
+
+        path = np.array([
+            [r * np.sin(t), r * np.cos(t), t / (winding_num * 2 * np.pi) * length]
+            for t in np.linspace(0, winding_num * 2 * np.pi, winding_num * 360)
+        ], dtype=np.float32)
+
+        lcs = LocalCoordinateSystem.global_coordinate_system().to_float32()
+        cct = SoleLayerCct(path, 1000, lcs)
+
+        print(lcs)
+
+        p0 = cct.magnetic_field_at(Vectors.create(0, 0, 0).astype(np.float32))
+        p1 = cct.magnetic_field_at(np.array([0, 0, 0.05], dtype=np.float32))
+        p2 = cct.magnetic_field_at(Vectors.create(0, 0.001, 0.05).astype(np.float32))
+
+        # print()
+        # print(p0)
+        # print(p1)
+        # print(p2)
+
+        self.assertTrue(
+            Equal.equal_vector(p0, np.array([-9.641213222579932E-5, -0.0016659990498348225, -0.1250432833225887]),
+                               err=1e-5))
+        self.assertTrue(
+            Equal.equal_vector(p1, np.array([-7.496745957474563E-4, -3.7777669447541795E-19, -0.24645342280018406]),
+                               err=1e-5))
+        self.assertTrue(
+            Equal.equal_vector(p2, np.array([-7.128547526957852E-4, -6.352747104407253E-20, -0.2464630712060889]),
+                               err=1e-5))
+
 
 if __name__ == '__main__':
     unittest.main()

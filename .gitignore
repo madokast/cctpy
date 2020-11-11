@@ -130,3 +130,5 @@ dmypy.json
 
 .vscode/
 .idea/
+/code/c/cct_for_cuda/.vs/
+/code/c/cct_for_cuda/x64/

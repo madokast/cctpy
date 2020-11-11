@@ -158,6 +158,13 @@ class LocalCoordinateSystem:
         self.XI = Vectors.normalize_self(second_direction.copy())
         self.YI = np.cross(self.ZI, self.XI)
 
+    def to_float32(self):
+        self.location = self.location.astype(np.float32)
+        self.XI = self.XI.astype(np.float32)
+        self.YI = self.YI.astype(np.float32)
+        self.ZI = self.ZI.astype(np.float32)
+        return self
+
     def __str__(self) -> str:
         return f"ORIGIN={self.location}, xi={self.XI}, yi={self.YI}, zi={self.ZI}"
 

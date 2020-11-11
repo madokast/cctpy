@@ -118,6 +118,30 @@ class Vectors:
     def create(x: float, y: float, z: float) -> np.ndarray:
         return np.array([x, y, z])
 
+    @staticmethod
+    def create_float32(x: float, y: float, z: float) -> np.ndarray:
+        return np.array([x, y, z], dtype=np.float32)
+
+    @staticmethod
+    def empty() -> np.ndarray:
+        return np.empty(3)
+
+    @staticmethod
+    def empty_float32() -> np.ndarray:
+        return np.empty(3, dtype=np.float32)
+
+    @staticmethod
+    def random() -> np.ndarray:
+        return np.random.randn(3)
+
+    @staticmethod
+    def random_float32() -> np.ndarray:
+        return np.random.randn(3).astype(np.float32)
+
+    @staticmethod
+    def cross(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        return np.cross(a, b)
+
 
 class Stream:
     """
@@ -260,3 +284,33 @@ class Ellipse:
             points[i, :] = self.point_after(c / num * i)
 
         return points
+
+
+class Scalar:
+    """
+    标量，但是使用 np [] 表示，主要用于向 cuda 传值
+    """
+
+    @staticmethod
+    def of(a: float) -> np.ndarray:
+        return np.array([a])
+
+    @staticmethod
+    def of_float32(a: float) -> np.ndarray:
+        return np.array([a], dtype=np.float32)
+
+    @staticmethod
+    def empty() -> np.ndarray:
+        return np.empty(1)
+
+    @staticmethod
+    def empty_float32() -> np.ndarray:
+        return np.empty(1, dtype=np.float32)
+
+    @staticmethod
+    def random() -> np.ndarray:
+        return np.random.randn(1)
+
+    @staticmethod
+    def random_float32() -> np.ndarray:
+        return np.random.randn(1).astype(np.float32)
