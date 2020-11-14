@@ -300,6 +300,10 @@ class Scalar:
         return np.array([a], dtype=np.float32)
 
     @staticmethod
+    def of_int32(a: int) -> np.ndarray:
+        return np.array([a], dtype=np.int32)
+
+    @staticmethod
     def empty() -> np.ndarray:
         return np.empty(1)
 

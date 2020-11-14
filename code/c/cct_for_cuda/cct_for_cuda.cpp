@@ -28,6 +28,13 @@ float sqrtf(float a) {
     a_local[Z] += b[Z];
 }
 
+/*__device__ __forceinline__*/ void sub3d(float* a, float* b, float* ret)
+{
+    ret[X] = a[X] - b[X];
+    ret[Y] = a[Y] - b[Y];
+    ret[Z] = a[Z] - b[Z];
+}
+
 /*__device__ __forceinline__*/ void copy3d(float* src, float* des)
 {
     des[X] = src[X];
@@ -42,23 +49,29 @@ float sqrtf(float a) {
     ret[Z] = a[X] * b[Y] - a[Y] * b[X];
 }
 
-/*__device__ __forceinline__*/ void dot_a_v(float* a, float* v)
+/*__device__ __forceinline__*/ void dot_a_v(float a, float* v)
 {
-    v[X] *= *a;
-    v[Y] *= *a;
-    v[Z] *= *a;
+    v[X] *= a;
+    v[Y] *= a;
+    v[Z] *= a;
 }
 
-/*__device__ __forceinline__*/ void dot_v_v(float* v1, float* v2, float* ret)
+/*__device__ __forceinline__*/ float dot_v_v(float* v1, float* v2)
 {
-    *ret = v1[X] * v2[X] + v1[Y] * v2[Y] + v1[Z] * v2[Z];
+    return v1[X] * v2[X] + v1[Y] * v2[Y] + v1[Z] * v2[Z];
 }
 
-/*__device__ __forceinline__*/ void len3d(float* v, float* len)
+/*__device__ __forceinline__*/ float len3d(float* v)
 {
-    *len = sqrtf(v[X] * v[X] + v[Y] * v[Y] + v[Z] * v[Z]);
+    return sqrtf(v[X] * v[X] + v[Y] * v[Y] + v[Z] * v[Z]);
 }
 
+/*__device__ __forceinline__*/ void neg3d(float* v)
+{
+    v[X] = -v[X];
+    v[Y] = -v[Y];
+    v[Z] = -v[Z];
+}
 
 
 int main()
