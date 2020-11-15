@@ -2,6 +2,7 @@
 基础工具函数
 """
 import logging
+import math
 from typing import Iterable, Callable, List
 
 import numpy as np
@@ -115,8 +116,56 @@ class Vectors:
         return Vectors.update_length(vector, 1.)
 
     @staticmethod
-    def create(x: float, y: float, z: float) -> np.ndarray:
-        return np.array([x, y, z])
+    def rotate_self_z_axis(v: np.ndarray, phi: float) -> np.ndarray:
+        """
+        矢量绕 z 轴旋转 phi 弧度
+        注意是原地操作，矢量 v 会发生变化，返回的不是新矢量
+        Parameters
+        ----------
+        v 要被旋转的矢量
+        phi 旋转弧度
+
+        Returns v 自身
+        -------
+
+        """
+        # 获取 x 和 y 坐标
+        x = v[0]
+        y = v[1]
+
+        # 旋转矩阵
+        r11 = np.cos(phi)
+        r12 = -np.sin(phi)
+        r21 = -r12
+        r22 = r11
+
+        # 旋转
+        v[0] = r11 * x + r12 * y
+        v[1] = r21 * x + r22 * y
+
+        return v
+
+    @staticmethod
+    def angle_to_x_axis(v: np.ndarray) -> float:
+        """
+        矢量 this 和 x 轴的夹角
+        具体计算方法同极坐标的 θ 角
+        Parameters
+        ----------
+        v 矢量
+
+        Returns 矢量 this 和 x 轴的夹角
+        -------
+
+        """
+        return math.atan2(v[1], v[0])
+
+    @staticmethod
+    def create(x: float, y: float, z: float = float('nan')) -> np.ndarray:
+        if math.isnan(z):
+            return np.array([x, y], dtype=np.float64)
+        else:
+            return np.array([x, y, z], dtype=np.float64)
 
     @staticmethod
     def create_float32(x: float, y: float, z: float) -> np.ndarray:
@@ -318,3 +367,44 @@ class Scalar:
     @staticmethod
     def random_float32() -> np.ndarray:
         return np.random.randn(1).astype(np.float32)
+
+
+class Circle:
+    """
+    圆
+    """
+
+    @staticmethod
+    def unit_circle(phi: float) -> np.ndarray:
+        """
+        单位圆（极坐标）
+        返回：极坐标(r=1.0,phi=phi)的点的直角坐标(x,y)
+        Parameters
+        ----------
+        phi 极坐标phi
+
+        Returns 单位圆上的一点
+        -------
+
+        """
+        x = np.cos(phi)
+        y = np.sin(phi)
+
+        return np.array([x, y])
+
+
+class Debug:
+    @staticmethod
+    def print_traceback():
+        """
+        打印函数调用栈
+        Returns
+        -------
+
+        """
+        import sys
+
+        f = sys._getframe()
+        while f is not None:
+            print(f)
+            f = f.f_back

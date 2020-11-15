@@ -5,8 +5,8 @@
 import numpy as np
 from typing import List, Tuple
 
-from cctpy.baseutils import Vectors, Equal
-from cctpy.constant import ORIGIN3, XI, ZI
+from cctpy.baseutils import Vectors, Equal, Stream, Converter, Circle, Debug
+from cctpy.constant import ORIGIN3, XI, ZI, ZERO3, MM
 
 
 class Magnet:
@@ -213,3 +213,393 @@ class Plotable:
         -------
         """
         raise NotImplementedError
+
+
+class Line2(Plotable):
+    """
+    二维 xy 平面的一条有起点和终点的连续曲线段，可以是直线、圆弧
+    本类包含 3 个抽象方法，需要实现：
+    get_length 获得曲线长度
+    point_at 从曲线起点出发，s 位置处的点
+    direct_at 从曲线起点出发，s 位置处曲线方向
+
+    说明：这个类主要用于构建 “理想轨道”，理想轨道的用处很多：
+    1. 获取理想轨道上的理想粒子；
+    2. 研究理想轨道上的磁场分布
+
+    """
+
+    def get_length(self) -> float:
+        """
+        获得曲线的长度
+        Returns 曲线的长度
+        -------
+
+        """
+        raise NotImplementedError
+
+    def point_at(self, s: float) -> np.ndarray:
+        """
+        获得曲线 s 位置处的点 (x,y)
+        即从曲线起点出发，运动 s 长度后的位置
+        Parameters
+        ----------
+        s 长度量，曲线上 s 位置
+
+        Returns 曲线 s 位置处的点 (x,y)
+        -------
+
+        """
+        raise NotImplementedError
+
+    def direct_at(self, s: float) -> np.ndarray:
+        """
+        获得 s 位置处，曲线的方向
+        Parameters
+        ----------
+        s 长度量，曲线上 s 位置
+
+        Returns s 位置处，曲线的方向
+        -------
+
+        """
+        raise NotImplementedError
+
+    def right_hand_side_point(self, s: float, d: float) -> np.ndarray:
+        """
+        位于 s 处的点，它右手边 d 处的点
+
+         1    5    10     15
+         -----------------@------>
+         |2
+         |4               *
+        如上图，一条直线，s=15，d=4 ,即点 @ 右手边 4 距离处的点 *
+
+        说明：这个方法，主要用于四极场、六极场的计算，因为需要涉及轨道横向位置的磁场
+
+        Parameters
+        ----------
+        s 长度量，曲线上 s 位置
+        d 长度量，d 距离远处
+
+        Returns 位于 s 处的点，它右手边 d 处的点
+        -------
+
+        """
+        ps = self.point_at(s)
+
+        # 方向
+        ds = self.direct_at(s)
+
+        return ps + Vectors.update_length(
+            Vectors.rotate_self_z_axis(ds.copy(), -np.pi / 2),
+            d
+        )
+
+    def left_hand_side_point(self, s: float, d: float) -> np.ndarray:
+        """
+        位于 s 处的点，它左手边 d 处的点
+        说明见 right_hand_side_point 方法
+        Parameters
+        ----------
+        s 长度量，曲线上 s 位置
+        d 长度量，d 距离远处
+
+        Returns 位于 s 处的点，它左手边 d 处的点
+        -------
+
+        """
+        return self.right_hand_side_point(s, -d)
+
+    # ------------------------------端点性质-------------------- #
+    def point_at_start(self):
+        return self.point_at(0.0)
+
+    def point_at_end(self):
+        return self.point_at(self.get_length())
+
+    def direct_at_start(self):
+        return self.direct_at(0.0)
+
+    def direct_at_end(self):
+        return self.direct_at(self.get_length())
+
+    # ------------------------------平移-------------------- #
+    def __add__(self, v2: np.ndarray):
+        """
+        Line2 的平移， v2 表示移动的方向和距离
+        Parameters
+        ----------
+        v2 二维向量
+
+        Returns 平移后的 Line2
+        -------
+
+        """
+
+        class MovedLine2(Line2):
+            def __init__(self, hold):
+                self.hold = hold
+
+            def get_length(self) -> float:
+                return self.hold.get_length()
+
+            def point_at(self, s: float) -> np.ndarray:
+                return self.hold.point_at(s) + v2
+
+            def direct_at(self, s: float) -> np.ndarray:
+                return self.hold.direct_at(s)
+
+        return MovedLine2(self)
+
+    # ------------------------------ 离散 ------------------------#
+    def disperse2d(self, step: float = 1.0 * MM) -> np.ndarray:
+        """
+        二维离散轨迹点
+        Parameters
+        ----------
+        step 步长
+
+        Returns 二维离散轨迹点
+        -------
+
+        """
+        number: int = int(self.get_length() / step)
+        return Stream.linspace(0, self.get_length(), number).map(
+            lambda t: self.point_at(t)
+        ).to_vector()
+
+    def disperse3d(self, step: float = 1.0 * MM) -> np.ndarray:
+        """
+        三维离散轨迹点，其中第三维 z == 0.0
+        Parameters
+        ----------
+        step 步长
+
+        Returns 二维离散轨迹点
+        -------
+
+        """
+        number: int = int(self.get_length() / step)
+        return Stream.linspace(0, self.get_length(), number).map(
+            lambda t: np.hstack([self.point_at(t), [0.0]])
+        ).to_vector()
+
+    # ------------------------------画图-------------------- #
+    def line_and_color(self, describe='r') -> List[Tuple[np.ndarray, str]]:
+        line3 = self.disperse3d()
+        return [(line3, describe)]
+
+    def __str__(self):
+        return f"Line2，起点{self.point_at_start()}，长度{self.get_length()}"
+
+
+class StraightLine2(Line2):
+    """
+    二维直线段，包含三个参数：长度、方向、起点
+    """
+
+    def __init__(self, length: float, direct: np.ndarray, start_point: np.ndarray):
+        self.length = length
+        self.direct = direct
+        self.start_point = start_point
+
+    def get_length(self) -> float:
+        return self.length
+
+    def point_at(self, s: float) -> np.ndarray:
+        return self.start_point + Vectors.update_length(
+            self.direct.copy(),
+            s
+        )
+
+    def direct_at(self, s: float) -> np.ndarray:
+        return self.direct
+
+    def __str__(self):
+        return f"直线段，起点{self.start_point}，方向{self.direct}，长度{self.length}"
+
+
+class ArcLine2(Line2):
+    """
+    二维圆弧段
+    借助极坐标的思想来描述圆弧
+    基础属性： 圆弧的半径 radius、圆弧的圆心 center
+    起点描述：极坐标 phi 值
+    弧长：len = radius * totalPhi
+
+    起点start_point、圆心center、半径radius、旋转方向clockwise、角度totalPhi 五个自由度
+    起点弧度值 starting_phi、起点处方向、半径radius、旋转方向clockwise、角度totalPhi 五个自由度
+
+    如图： *1 表示起点方向，@ 是圆心，上箭头 ↑ 是起点处方向，旋转方向是顺时针，*5 是终点，因此角度大约是 80 deg
+                *5
+           *4
+       *3
+     *2
+    *1     ↑       @
+
+    """
+
+    def __init__(self, starting_phi: float, center: np.ndarray, radius: float, total_phi: float, clockwise: bool):
+        self.starting_phi = starting_phi
+        self.center = center
+        self.radius = radius
+        self.total_phi = total_phi
+        self.clockwise = clockwise
+        self.length = radius * total_phi
+
+    def get_length(self) -> float:
+        return self.length
+
+    def point_at(self, s: float) -> np.ndarray:
+        phi = s / self.radius
+        current_phi = self.starting_phi - phi if self.clockwise else self.starting_phi + phi
+
+        uc = Circle.unit_circle(current_phi)
+
+        return Vectors.update_length(uc, self.radius) + self.center
+
+    def direct_at(self, s: float) -> np.ndarray:
+        phi = s / self.radius
+        current_phi = self.starting_phi - phi if self.clockwise else self.starting_phi + phi
+
+        uc = Circle.unit_circle(current_phi)
+
+        return Vectors.rotate_self_z_axis(
+            uc,
+            -np.pi / 2 if self.clockwise else np.pi / 2
+        )
+
+    @staticmethod
+    def create(start_point: np.ndarray, start_direct: np.ndarray, radius: float, clockwise: bool, total_deg: float):
+        center: np.ndarray = start_point + Vectors.update_length(
+            Vectors.rotate_self_z_axis(start_direct.copy(), -np.pi / 2 if clockwise else np.pi / 2),
+            radius
+        )
+
+        starting_phi = Vectors.angle_to_x_axis(start_point - center)
+
+        total_phi = Converter.angle_to_radian(total_deg)
+
+        return ArcLine2(starting_phi, center, radius, total_phi, clockwise)
+
+    def __str__(self):
+        return f"弧线段，起点{self.point_at_start()}，方向{self.direct_at_start()}，顺时针{self.clockwise}，半径{self.radius}，角度{self.total_phi}"
+
+
+class Trajectory(Line2):
+    """
+    二维轨迹，由直线+圆弧组成
+    """
+
+    def __init__(self, first_line2: Line2):
+        """
+        构造器，传入第一条线 first_line2
+        Parameters
+        ----------
+        first_line2 第一条线
+        -------
+
+        """
+        self.__trajectoryList = [first_line2]
+        self.__length = first_line2.get_length()
+        self.__point_at_error_happen = False  # 是否发生 point_at 错误
+
+    def add_strait_line(self, length: float):
+        """
+        尾接直线
+        Parameters
+        ----------
+        length 直线长度
+
+        Returns self
+        -------
+
+        """
+        last_line = self.__trajectoryList[-1]
+        sp = last_line.point_at_end()
+        sd = last_line.direct_at_end()
+
+        sl = StraightLine2(length, sd, sp)
+
+        self.__trajectoryList.append(sl)
+        self.__length += length
+
+        return self
+
+    def add_arc_line(self, radius: float, clockwise: bool, angle_deg: float):
+        """
+        尾接圆弧
+        Parameters
+        ----------
+        radius 半径
+        clockwise 顺时针？
+        angle_deg 角度
+
+        Returns self
+        -------
+
+        """
+        last_line = self.__trajectoryList[-1]
+        sp = last_line.point_at_end()
+        sd = last_line.direct_at_end()
+
+        al = ArcLine2.create(sp, sd, radius, clockwise, angle_deg)
+
+        self.__trajectoryList.append(al)
+        self.__length += al.get_length()
+
+        return self
+
+    def get_length(self) -> float:
+        return self.__length
+
+    def point_at(self, s: float) -> np.ndarray:
+        s0 = s
+
+        for line in self.__trajectoryList:
+            if s <= line.get_length():
+                return line.point_at(s)
+            else:
+                s -= line.get_length()
+
+        last_line = self.__trajectoryList[-1]
+
+        # 2020年4月2日
+        # 解决了一个因为浮点数产生的巨大bug
+        if np.abs(s) <= 1e-8:
+            return last_line.point_at_end()
+
+        if not self.__point_at_error_happen:
+            self.__point_at_error_happen = True
+            print(f"ERROR Trajectory::point_at{s0}")
+            Debug.print_traceback()
+
+        return last_line.point_at(s)
+
+    def direct_at(self, s: float) -> np.ndarray:
+        s0 = s
+
+        for line in self.__trajectoryList:
+            if s <= line.get_length():
+                return line.direct_at(s)
+            else:
+                s -= line.get_length()
+
+        last_line = self.__trajectoryList[-1]
+
+        # 2020年4月2日
+        # 解决了一个因为浮点数产生的巨大bug
+        if np.abs(s) <= 1e-8:
+            return last_line.direct_at_end()
+
+        if not self.__point_at_error_happen:
+            self.__point_at_error_happen = True
+            print(f"ERROR Trajectory::direct_at{s0}")
+            Debug.print_traceback()
+
+        return last_line.direct_at(s)
+
+    def __str__(self):
+        details = '\t\n'.join(self.__trajectoryList.__str__())
+        return f"Trajectory:{details}"
