@@ -296,7 +296,18 @@ class NdArrayTest(unittest.TestCase):
 
         print(ab)
 
+    def test_copy(self):
+        a = Vectors.create_float32(1, 2, 3)
+        b = Vectors.create_float32(2, 3, 4)
 
+        data = np.empty((6,),dtype = np.float32)
+
+        data[0:3] = a
+        data[3:6] = b
+
+        print(data)
+
+        self.assertTrue(Equal.equal_vector(data,np.array([1., 2., 3. ,2. ,3. ,4.],dtype=np.float32)))
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

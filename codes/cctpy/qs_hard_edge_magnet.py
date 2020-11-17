@@ -63,7 +63,7 @@ class QsHardEdgeMagnet(Magnet, Plotable):
                     x ** 2 + y ** 2) > self.aperture_radius:
                 return ZERO3
             else:
-                # bx 和 by 分别是局部坐标系中 x 和 y 方向的磁场（局部坐标系中 z 方向是束流方向，不会产生磁场）
+                # bx 和 by 分别是局部坐标系中 x 和 y 方向的磁场（局部坐标系中 z 方向是理想束流方向/中轴线反向，不会产生磁场）
                 bx = self.gradient * y + self.second_gradient * (x * y)
                 by = self.gradient * x + 0.5 * self.second_gradient * (x ** 2 - y ** 2)
 

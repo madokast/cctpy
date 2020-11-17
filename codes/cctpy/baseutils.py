@@ -219,6 +219,22 @@ class Stream:
         """
         return Stream([func(e) for e in self.__li])
 
+    def peek(self, func: Callable):
+        """
+        核心方法，对每个元素执行 func，但是不影响流内元素
+        Parameters
+        ----------
+        func peek 函数
+
+        Returns
+        -------
+
+        """
+        for e in self.__li:
+            func(e)
+
+        return self
+
     def to_list(self) -> List:
         return self.__li
 
@@ -227,6 +243,13 @@ class Stream:
 
     def join(self, delimiter=' ') -> str:
         return delimiter.join(self.__li)
+
+    def foreach(self, func: Callable):
+        for e in self.__li:
+            func(e)
+
+    def foreach_println(self):
+        self.foreach(lambda e: print(e))
 
 
 class Ellipse:
@@ -408,3 +431,20 @@ class Debug:
         while f is not None:
             print(f)
             f = f.f_back
+
+
+class Average:
+    """
+    平均器
+    """
+
+    def __init__(self):
+        self.sum: float = 0.0
+        self.num: int = 0
+
+    def add(self, val: float):
+        self.sum += val
+        self.num += 1
+
+    def average(self):
+        return self.sum / float(self.num)

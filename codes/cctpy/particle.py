@@ -446,8 +446,77 @@ class PhaseSpaceParticle:
                 ideal_particle, coordinate_system, rp)
         ).to_list()
 
+    @staticmethod
+    def convert_delta_from_momentum_dispersion_to_energy_dispersion(phaseSpaceParticle, centerKineticEnergy_MeV):
+        """
+        动量分散改动能分散
+        Parameters
+        ----------
+        phaseSpaceParticle 原粒子
+        centerKineticEnergy_MeV 中心动能，如 250
+
+        Returns 动量分散改动能分散后的粒子
+        -------
+
+        """
+        copied: PhaseSpaceParticle = phaseSpaceParticle.copy()
+        deltaMomentumDispersion = copied.delta
+        deltaEnergyDispersion = Protons.convert_momentum_dispersion_to_energy_dispersion(
+            deltaMomentumDispersion, centerKineticEnergy_MeV)
+
+        copied.delta = deltaEnergyDispersion
+
+        return copied
+
+    @staticmethod
+    def convert_delta_from_momentum_dispersion_to_energy_dispersion_for_list(phaseSpaceParticles: List,
+                                                                             centerKineticEnergy_MeV):
+        """
+        动量分散改动能分散，见上方法 convert_delta_from_momentum_dispersion_to_energy_dispersion
+        Parameters
+        ----------
+        phaseSpaceParticles
+        centerKineticEnergy_MeV
+
+        Returns
+        -------
+
+        """
+        return Stream(phaseSpaceParticles).map(
+            lambda pp: PhaseSpaceParticle.convert_delta_from_momentum_dispersion_to_energy_dispersion(
+                pp, centerKineticEnergy_MeV)
+        ).to_list()
+
+    @staticmethod
+    def convert_delta_from_energy_dispersion_to_energy_dispersion_momentum_dispersion(phaseSpaceParticle,
+                                                                                      centerKineticEnergy_MeV: float):
+        copied = phaseSpaceParticle.copy()
+
+        EnergyDispersion = copied.getDelta()
+
+        MomentumDispersion = Protons.convert_energy_dispersion_to_momentum_dispersion(
+            EnergyDispersion, centerKineticEnergy_MeV)
+
+        copied.delta = MomentumDispersion
+
+        return copied
+
+    @staticmethod
+    def convert_delta_from_energy_dispersion_to_energy_dispersion_momentum_dispersion_for_list(
+            phaseSpaceParticles: List, centerKineticEnergy_MeV: float):
+        return Stream(phaseSpaceParticles).map(
+            lambda pp: PhaseSpaceParticle.convert_delta_from_energy_dispersion_to_energy_dispersion_momentum_dispersion(
+                pp, centerKineticEnergy_MeV)
+        ).to_list()
+
     def __str__(self) -> str:
         return f"x={self.x},xp={self.xp},y={self.y},yp={self.yp},z={self.z},d={self.delta}"
+
+    def copy(self):
+        return PhaseSpaceParticle(self.x, self.xp, self.y, self.yp, self.z, self.delta)
+
+    def getDelta(self):
+        return self.delta
 
 
 class ParticleFactory:
@@ -459,16 +528,26 @@ class ParticleFactory:
     def create_proton(position: np.ndarray, direct: np.ndarray, kinetic_MeV: float = 250) -> RunningParticle:
         # 速率
         speed = LIGHT_SPEED * np.sqrt(
-            1 - (Protons.STATIC_ENERGY_MeV / (Protons.STATIC_ENERGY_MeV + kinetic_MeV)) ** 2
+            1. - (Protons.STATIC_ENERGY_MeV / (Protons.STATIC_ENERGY_MeV + kinetic_MeV)) ** 2
         )
 
         # mass kg
         relativistic_mass = Protons.STATIC_MASS_KG / np.sqrt(
-            1 - (speed ** 2) / (LIGHT_SPEED ** 2)
+            1. - (speed ** 2) / (LIGHT_SPEED ** 2)
         )
 
         return RunningParticle(position, Vectors.update_length(direct.copy(), speed), relativistic_mass,
                                Protons.CHARGE_QUANTITY, speed)
+
+    @staticmethod
+    def create_proton_by_position_and_velocity(position: np.ndarray, velocity: np.ndarray) -> RunningParticle:
+        speed = Vectors.length(velocity)
+
+        relativistic_mass = Protons.STATIC_MASS_KG / np.sqrt(
+            1.0 - (speed ** 2) / (LIGHT_SPEED ** 2)
+        )
+
+        return RunningParticle(position, velocity, relativistic_mass, Protons.CHARGE_QUANTITY, speed)
 
     @staticmethod
     def create_from_phase_space_particle(

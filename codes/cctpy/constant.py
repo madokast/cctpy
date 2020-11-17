@@ -221,7 +221,7 @@ class Protons:
     @classmethod
     def convert动量分散_TO_能量分散(cls, 动量分散: float, 动能_MeV: float) -> float:
         """
-        下方法的英文版
+        下方法的中文版
         Parameters
         ----------
         动量分散
@@ -252,3 +252,25 @@ class Protons:
         k = (kinetic_energy_MeV + cls.STATIC_ENERGY_MeV) / (kinetic_energy_MeV + 2 * cls.STATIC_ENERGY_MeV)
 
         return momentum_dispersion / k
+
+    @classmethod
+    def convert能量分散_TO_动量分散(cls, 能量分散: float, 动能_MeV: float) -> float:
+        k = (动能_MeV + cls.STATIC_ENERGY_MeV) / (动能_MeV + 2 * cls.STATIC_ENERGY_MeV)
+        return 能量分散 * k
+
+    @classmethod
+    def convert_energy_dispersion_to_momentum_dispersion(cls, energyDispersion: float,
+                                                         kineticEnergy_MeV: float) -> float:
+        """
+        上方法的英文版
+        Parameters
+        ----------
+        energyDispersion 能量分散
+        kineticEnergy_MeV 动能，典型值 250
+
+        Returns 动量分散
+        -------
+
+        """
+        k = (kineticEnergy_MeV + cls.STATIC_ENERGY_MeV) / (kineticEnergy_MeV + 2 * cls.STATIC_ENERGY_MeV)
+        return energyDispersion * k
