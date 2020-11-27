@@ -1,14 +1,14 @@
 import geatpy as ea
-from problem import Myproblem
+from cuda_optim.geatpy_problem import Myproblem
 
 problem = Myproblem()
 Encoding = 'RI'
-NIND = 200
+NIND = 120
 Field = ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)
 population = ea.Population(Encoding, Field, NIND)
 
 myAlgorithm = ea.moea_NSGA3_templet(problem,population)
-myAlgorithm.MAXGEN = 300
+myAlgorithm.MAXGEN = 500
 myAlgorithm.drawing = 0
 
 [NDset, population] = myAlgorithm.run()

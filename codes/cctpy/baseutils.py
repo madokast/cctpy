@@ -55,7 +55,7 @@ class Equal:
         err 容许误差
         return a == b ?
         """
-        return np.abs(a - b) < err
+        return a == b or np.abs(a - b) < err or 2 * np.abs((a - b) / (a + b)) < err
 
     @staticmethod
     def equal_vector(v1: np.ndarray, v2: np.ndarray, err: float = 1e-10) -> bool:
@@ -448,3 +448,30 @@ class Average:
 
     def average(self):
         return self.sum / float(self.num)
+
+
+class Statistic:
+    """
+    统计器，比 Average 更高级
+    """
+
+    def __init__(self):
+        self.__data: List[float] = []
+
+    def add(self, val: float):
+        self.__data.append(val)
+
+    def max(self):
+        return np.max(self.__data)
+
+    def min(self):
+        return np.min(self.__data)
+
+    def var(self):
+        return np.var(self.__data)
+
+    def average(self):
+        return sum(self.__data) / len(self.__data)
+
+    def clear(self):
+        self.__data: List[float] = []

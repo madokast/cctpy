@@ -123,7 +123,8 @@ class RunningParticle(Plotable):
         # 验证
         Equal.require_float_equal(
             scalar_momentum, self.compute_scalar_momentum(),
-            f"RunningParticle::change_scalar_momentum异常，scalar_momentum{scalar_momentum}!=self.compute_scalar_momentum{self.compute_scalar_momentum}"
+            f"RunningParticle::change_scalar_momentum异常，scalar_momentum{scalar_momentum}!=self.compute_scalar_momentum{self.compute_scalar_momentum}",
+            err=1e-6
         )
 
         Equal.require_float_equal(
@@ -533,7 +534,7 @@ class ParticleFactory:
 
         # mass kg
         relativistic_mass = Protons.STATIC_MASS_KG / np.sqrt(
-            1. - (speed ** 2) / (LIGHT_SPEED ** 2)
+            1.0 - (speed ** 2) / (LIGHT_SPEED ** 2)
         )
 
         return RunningParticle(position, Vectors.update_length(direct.copy(), speed), relativistic_mass,
@@ -543,9 +544,15 @@ class ParticleFactory:
     def create_proton_by_position_and_velocity(position: np.ndarray, velocity: np.ndarray) -> RunningParticle:
         speed = Vectors.length(velocity)
 
-        relativistic_mass = Protons.STATIC_MASS_KG / np.sqrt(
-            1.0 - (speed ** 2) / (LIGHT_SPEED ** 2)
-        )
+        relativistic_mass = 0.0
+
+        try:
+            relativistic_mass = Protons.STATIC_MASS_KG / np.sqrt(
+                1.0 - (speed ** 2) / (LIGHT_SPEED ** 2)
+            )
+        except RuntimeWarning as e:
+            print(
+                f"ParticleFactory::create_proton_by_position_and_velocity 莫名其妙的异常 speed={speed} LIGHT_SPEED={LIGHT_SPEED} e={e}")
 
         return RunningParticle(position, velocity, relativistic_mass, Protons.CHARGE_QUANTITY, speed)
 

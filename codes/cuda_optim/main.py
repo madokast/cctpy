@@ -6,12 +6,14 @@ from cuda_optim import utils
 from cuda_optim.cct345_data_generator import list_cct_data_generate, list_qs_data_generate
 from cuda_optim.cuda_code import cuda_particle_run_parallel
 from cuda_optim.utils import cuda_data_running_particles_at_second_part_entry, analyze_and_output, \
-    cuda_particle_data_to_running_particle
+    cuda_particle_data_to_running_particle, analyze1119_and_output, analyze1121_and_output, analyze1123_and_output,\
+    analyze1127_and_output
 
-momentum_dispersions = [0.0, 0.05]
-particle_number_per_plane_per_dp = 4
+momentum_dispersions = [-0.05, -0.025, 0.0, 0.025, 0.05]
+particle_number_per_plane_per_dp = 6
 
-if __name__ == '__main__':
+
+def run():
     start_time = time()
 
     # 读取 input.txt 的全部机架配置
@@ -50,7 +52,8 @@ if __name__ == '__main__':
     running_particle_list_list = cuda_particle_data_to_running_particle(result, gantry_number, particle_number[0])
 
     # 分析 running_particle_list_list 输入结果到 output.txt
-    analyze_and_output(running_particle_list_list, gantry_number, total_particle_number, momentum_dispersions)
+    analyze1127_and_output(running_particle_list_list, gantry_number, total_particle_number, momentum_dispersions)
+    # analyze1119_and_output(running_particle_list_list, gantry_number, total_particle_number, momentum_dispersions)
 
     end_time = time()
     print(f"用时{end_time - start_time}s")

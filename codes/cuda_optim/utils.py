@@ -8,7 +8,7 @@ import numpy as np
 from cctpy.constant import MM
 from cctpy.particle import PhaseSpaceParticle, RunningParticle, ParticleFactory
 from cuda_optim import COSY_MAPS
-from cctpy.baseutils import Vectors, Stream, Average
+from cctpy.baseutils import Vectors, Stream, Average, Statistic
 
 # 优化匹配的变量数目
 VARIABLE_NUMBER: int = 10
@@ -246,6 +246,7 @@ def cuda_particle_data_to_running_particle(data: np.ndarray, gantry_number: int,
     return ret
 
 
+# 和 COSY 每个粒子对比
 def analyze_and_output(ps: List[List[RunningParticle]], gantry_number: int, total_particle_number: int,
                        momentum_dispersion_list: List[float]) -> None:
     """
@@ -269,36 +270,49 @@ def analyze_and_output(ps: List[List[RunningParticle]], gantry_number: int, tota
 
     particle_number_per_plane_per_dp: int = total_particle_number // len(momentum_dispersion_list) // 2 // gantry_number
 
+    # isoc 处 cosy pp
     cosy_pp = cosy_particles_at_ISOC(momentum_dispersion_list, particle_number_per_plane_per_dp)
 
+    # 映射到 x y 平面 [[x1,xp1],[x2,xp2]]
     ppx_cosy = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(cosy_pp)
     ppy_cosy = PhaseSpaceParticle.phase_space_particles_project_to_yyp_plane(cosy_pp)
 
     result: List[List[float]] = []
 
+    # 对于每个机架 / 组
     for gid in range(gantry_number):
         avg_x = Average()
         avg_xp = Average()
         avg_y = Average()
         avg_yp = Average()
 
+        # 第一列存访机架编号
         result_per_group: List[float] = [gid + 1]
 
+        # 这组机架 track 得到的 List[RunningParticle]
         particle_group = ps[gid]
 
+        # 转到 pp
         pp_group = PhaseSpaceParticle.create_from_running_particles(
             IP_ISOC, IP_ISOC.get_natural_coordinate_system(), particle_group)
 
+        # 映射到 x p 平面
         ppx_track = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(pp_group)
         ppy_track = PhaseSpaceParticle.phase_space_particles_project_to_yyp_plane(pp_group)
 
-        for i in range(0, particle_number_per_plane_per_dp * 2):
+        # print(
+        #    f"2020年11月19日 -- 每组机架粒子数目{ppx_track.shape[0]} particle_number_per_plane_per_dp={particle_number_per_plane_per_dp}")
+
+        # 对于 x 平面，List[RunningParticle]中前一半
+        for i in range(0, particle_number_per_plane_per_dp * len(momentum_dispersion_list)):
             pc = ppx_cosy[i]
             pt = ppx_track[i]
             avg_x.add(np.abs(pc[0] - pt[0]) / MM)
             avg_xp.add(np.abs(pc[1] - pt[1]) / MM)
 
-        for i in range(particle_number_per_plane_per_dp * 2, particle_number_per_plane_per_dp * 4):
+        # 对于 y 平面
+        for i in range(particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2):
             pc = ppy_cosy[i]
             pt = ppy_track[i]
             avg_y.add(np.abs(pc[0] - pt[0]) / MM)
@@ -308,6 +322,298 @@ def analyze_and_output(ps: List[List[RunningParticle]], gantry_number: int, tota
         result_per_group.append(avg_xp.average())
         result_per_group.append(avg_y.average())
         result_per_group.append(avg_yp.average())
+
+        result.append(result_per_group)
+
+    np.savetxt('output.txt', np.array(result))
+
+
+# 不和 COSY 对比，仅仅计算束斑，目标为 abs(X/Y束斑-3.5MM) ，动量分散合起来，目标两个
+def analyze1119_and_output(ps: List[List[RunningParticle]], gantry_number: int, total_particle_number: int,
+                           momentum_dispersion_list: List[float]) -> None:
+    """
+    分析运行结果，并写到 output.txt 中
+    类似 1 2.9106590546670255 3.9272244111035284 1.9234584254384846 0.45806934921638964
+    Parameters
+    ----------
+    ps 运行后的所有粒子
+    gantry_number 机架数目 / 组数
+    total_particle_number 总粒子数
+
+    Returns 无
+    -------
+
+    """
+    if gantry_number != len(ps):
+        raise ValueError(f"数据错误，gantry_number{gantry_number}！=len(ps){len(ps)}")
+    if int(total_particle_number) != int(len(ps[0]) * gantry_number):
+        raise ValueError(
+            f"数据错误，total_particle_number({total_particle_number})！=len(ps[0])*gantry_number({len(ps[0]) * gantry_number})")
+
+    particle_number_per_plane_per_dp: int = total_particle_number // len(momentum_dispersion_list) // 2 // gantry_number
+
+    result: List[List[float]] = []
+
+    # 对于每个机架 / 组
+    for gid in range(gantry_number):
+        # 第一列存访机架编号
+        result_per_group: List[float] = [gid + 1]
+
+        # 这组机架 track 得到的 List[RunningParticle]
+        particle_group = ps[gid]
+
+        # 转到 pp
+        pp_group = PhaseSpaceParticle.create_from_running_particles(
+            IP_ISOC, IP_ISOC.get_natural_coordinate_system(), particle_group)
+
+        # 映射到 x p 平面
+        ppx_track = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(pp_group)
+        ppy_track = PhaseSpaceParticle.phase_space_particles_project_to_yyp_plane(pp_group)
+        # 对于 x 平面，List[RunningParticle]中前一半
+
+        statistic = Statistic()
+
+        # 对于 x 平面
+        for i in range(0, particle_number_per_plane_per_dp * len(momentum_dispersion_list)):
+            pt = ppx_track[i]
+            statistic.add(pt[0])
+
+        result_per_group.append(
+            # x 方向所有动量分散，粒子叠起来，求束斑，和 3.5 做差，取绝对值
+            np.abs(3.5 * MM - (statistic.max() - statistic.min()) / MM / 2.0)
+        )
+        statistic.clear()
+
+        # 对于 y 平面
+        for i in range(particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2):
+            pt = ppy_track[i]
+            statistic.add(pt[0])
+        result_per_group.append(
+            np.abs(3.5 * MM - (statistic.max() - statistic.min()) / MM / 2.0)
+        )
+        statistic.clear()
+        result.append(result_per_group)
+
+    np.savetxt('output.txt', np.array(result))
+
+
+# 不和 COSY 对比，仅仅计算束斑，目标为 abs(束斑-3.5MM) 因此目标个数 = 平面 2 * 动量分散数目 k = 2k
+def analyze1121_and_output(ps: List[List[RunningParticle]], gantry_number: int, total_particle_number: int,
+                           momentum_dispersion_list: List[float]) -> None:
+    """
+    分析运行结果，并写到 output.txt 中
+    类似 1 2.9106590546670255 3.9272244111035284 1.9234584254384846 0.45806934921638964
+    Parameters
+    ----------
+    ps 运行后的所有粒子
+    gantry_number 机架数目 / 组数
+    total_particle_number 总粒子数
+
+    Returns 无
+    -------
+
+    """
+    if gantry_number != len(ps):
+        raise ValueError(f"数据错误，gantry_number{gantry_number}！=len(ps){len(ps)}")
+    if int(total_particle_number) != int(len(ps[0]) * gantry_number):
+        raise ValueError(
+            f"数据错误，total_particle_number({total_particle_number})！=len(ps[0])*gantry_number({len(ps[0]) * gantry_number})")
+
+    particle_number_per_plane_per_dp: int = total_particle_number // len(momentum_dispersion_list) // 2 // gantry_number
+
+    result: List[List[float]] = []
+
+    # 对于每个机架 / 组
+    for gid in range(gantry_number):
+        # 第一列存访机架编号
+        result_per_group: List[float] = [gid + 1]
+
+        # 这组机架 track 得到的 List[RunningParticle]
+        particle_group = ps[gid]
+
+        # 转到 pp
+        pp_group = PhaseSpaceParticle.create_from_running_particles(
+            IP_ISOC, IP_ISOC.get_natural_coordinate_system(), particle_group)
+
+        # 映射到 x p 平面
+        ppx_track = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(pp_group)
+        ppy_track = PhaseSpaceParticle.phase_space_particles_project_to_yyp_plane(pp_group)
+        # 对于 x 平面，List[RunningParticle]中前一半
+
+        statistic = Statistic()
+
+        # 对于 x 平面
+        for i in range(0, particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp):
+            for j in range(0, particle_number_per_plane_per_dp):
+                pt = ppx_track[i + j]
+                statistic.add(pt[0])
+            result_per_group.append(
+                # x 方向当前动量分散包络，和 3.5 做差，取绝对值
+                np.abs(3.5 * MM - (statistic.max() - statistic.min()) / MM / 2.0)
+            )
+            statistic.clear()
+
+        # y 平面
+        for i in range(particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2,
+                       particle_number_per_plane_per_dp):
+            for j in range(0, particle_number_per_plane_per_dp):
+                pt = ppx_track[i + j]
+                statistic.add(pt[0])
+            result_per_group.append(
+                # x 方向当前动量分散包络，和 3.5 做差，取绝对值
+                np.abs(3.5 * MM - (statistic.max() - statistic.min()) / MM / 2.0)
+            )
+            statistic.clear()
+
+        result.append(result_per_group)
+
+    np.savetxt('output.txt', np.array(result))
+
+
+# 不和 COSY 对比，匹配方差 输出 1 行
+def analyze1123_and_output(ps: List[List[RunningParticle]], gantry_number: int, total_particle_number: int,
+                           momentum_dispersion_list: List[float]) -> None:
+    """
+    分析运行结果，并写到 output.txt 中
+    类似 1 2.9106590546670255 3.9272244111035284 1.9234584254384846 0.45806934921638964
+    Parameters
+    ----------
+    ps 运行后的所有粒子
+    gantry_number 机架数目 / 组数
+    total_particle_number 总粒子数
+
+    Returns 无
+    -------
+
+    """
+    if gantry_number != len(ps):
+        raise ValueError(f"数据错误，gantry_number{gantry_number}！=len(ps){len(ps)}")
+    if int(total_particle_number) != int(len(ps[0]) * gantry_number):
+        raise ValueError(
+            f"数据错误，total_particle_number({total_particle_number})！=len(ps[0])*gantry_number({len(ps[0]) * gantry_number})")
+
+    particle_number_per_plane_per_dp: int = total_particle_number // len(momentum_dispersion_list) // 2 // gantry_number
+
+    result: List[List[float]] = []
+
+    # 对于每个机架 / 组
+    for gid in range(gantry_number):
+        # 第一列存访机架编号
+        result_per_group: List[float] = [gid + 1]
+
+        # 这组机架 track 得到的 List[RunningParticle]
+        particle_group = ps[gid]
+
+        # 转到 pp
+        pp_group = PhaseSpaceParticle.create_from_running_particles(
+            IP_ISOC, IP_ISOC.get_natural_coordinate_system(), particle_group)
+
+        # 映射到 x p 平面
+        ppx_track = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(pp_group)
+        ppy_track = PhaseSpaceParticle.phase_space_particles_project_to_yyp_plane(pp_group)
+        # 对于 x 平面，List[RunningParticle]中前一半
+
+        statistic = Statistic()
+        outer_statistic = Statistic()
+
+        # 对于 x 平面
+        for i in range(0, particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp):
+            for j in range(0, particle_number_per_plane_per_dp):
+                pt = ppx_track[i + j]
+                statistic.add(pt[0])
+            outer_statistic.add((statistic.max() - statistic.min()) / MM / 2.0)
+            statistic.clear()
+
+        # y 平面
+        for i in range(particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2,
+                       particle_number_per_plane_per_dp):
+            for j in range(0, particle_number_per_plane_per_dp):
+                pt = ppx_track[i + j]
+                statistic.add(pt[0])
+            outer_statistic.add((statistic.max() - statistic.min()) / MM / 2.0)
+            statistic.clear()
+
+        result_per_group.append(outer_statistic.var())
+        outer_statistic.clear()
+
+        result.append(result_per_group)
+
+    np.savetxt('output.txt', np.array(result))
+
+
+# 不和 COSY 对比，匹配方差和最大包络 输出 1 行
+def analyze1127_and_output(ps: List[List[RunningParticle]], gantry_number: int, total_particle_number: int,
+                           momentum_dispersion_list: List[float]) -> None:
+    """
+    分析运行结果，并写到 output.txt 中
+    类似 1 2.9106590546670255 3.9272244111035284 1.9234584254384846 0.45806934921638964
+    Parameters
+    ----------
+    ps 运行后的所有粒子
+    gantry_number 机架数目 / 组数
+    total_particle_number 总粒子数
+
+    Returns 无
+    -------
+
+    """
+    if gantry_number != len(ps):
+        raise ValueError(f"数据错误，gantry_number{gantry_number}！=len(ps){len(ps)}")
+    if int(total_particle_number) != int(len(ps[0]) * gantry_number):
+        raise ValueError(
+            f"数据错误，total_particle_number({total_particle_number})！=len(ps[0])*gantry_number({len(ps[0]) * gantry_number})")
+
+    particle_number_per_plane_per_dp: int = total_particle_number // len(momentum_dispersion_list) // 2 // gantry_number
+
+    result: List[List[float]] = []
+
+    # 对于每个机架 / 组
+    for gid in range(gantry_number):
+        # 第一列存访机架编号
+        result_per_group: List[float] = [gid + 1]
+
+        # 这组机架 track 得到的 List[RunningParticle]
+        particle_group = ps[gid]
+
+        # 转到 pp
+        pp_group = PhaseSpaceParticle.create_from_running_particles(
+            IP_ISOC, IP_ISOC.get_natural_coordinate_system(), particle_group)
+
+        # 映射到 x p 平面
+        ppx_track = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(pp_group)
+        ppy_track = PhaseSpaceParticle.phase_space_particles_project_to_yyp_plane(pp_group)
+        # 对于 x 平面，List[RunningParticle]中前一半
+
+        statistic = Statistic()
+        outer_statistic = Statistic()
+
+        # 对于 x 平面
+        for i in range(0, particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp):
+            for j in range(0, particle_number_per_plane_per_dp):
+                pt = ppx_track[i + j]
+                statistic.add(pt[0])
+            outer_statistic.add((statistic.max() - statistic.min()) / MM / 2.0)
+            statistic.clear()
+
+        # y 平面
+        for i in range(particle_number_per_plane_per_dp * len(momentum_dispersion_list),
+                       particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2,
+                       particle_number_per_plane_per_dp):
+            for j in range(0, particle_number_per_plane_per_dp):
+                pt = ppx_track[i + j]
+                statistic.add(pt[0])
+            outer_statistic.add((statistic.max() - statistic.min()) / MM / 2.0)
+            statistic.clear()
+
+        result_per_group.append(outer_statistic.var())
+        result_per_group.append(outer_statistic.max())
+        outer_statistic.clear()
 
         result.append(result_per_group)
 

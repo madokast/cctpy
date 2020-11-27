@@ -586,9 +586,9 @@ particle_run_parallel(float *data, float *qs_data, int* particle_number, float *
         }
     }
     
-    if (tid == 0) {
-        printf("CUDA::gid={%d}\\n",gantry_id+1);
-    }
+    //if (tid == 0) {
+    //    printf("CUDA::gid={%d}\\n",gantry_id+1);
+    //}
 }
 
 /**
