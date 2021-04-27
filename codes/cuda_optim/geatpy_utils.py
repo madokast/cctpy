@@ -29,6 +29,6 @@ def postprocess():
             time.sleep(30)
 
     # out = np.loadtxt('output.txt', usecols=[1])[:, np.newaxis] # 只有一列 用这个
-    out = np.loadtxt('output.txt', usecols=[1, 2])
+    out = np.loadtxt('output.txt', usecols=[1, 2, 3, 4, 5, 6])
 
     return out

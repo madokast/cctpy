@@ -8,7 +8,7 @@ import os
 class Myproblem(ea.Problem):
     def __init__(self):
         name = 'FirstSection'  # Name of the question,dosen't matter
-        M = 2  # Number of targets
+        M = 6  # Number of targets
         maxormins = [1] * M  # Want the maximum or the minimun of the target,[1] for the min, [0] for the max
         Dim = 10  # Dimension of the features
         varTypes = [0] * Dim  # Type of the features, [0] for real number , [1] for integer
@@ -27,5 +27,5 @@ class Myproblem(ea.Problem):
         ID = list(range(1, Number + 1))
         Inputfile_generator(ID, Vars.tolist())
         f = postprocess()
-        pop.CV = np.vstack([f[:, 0] - 1, f[:, 1] - 5,]).T
+        # pop.CV = np.vstack([f[:, 0] - 2, f[:, 1] - 2, f[:, 2] - 2, f[:, 3] - 2, f[:, 4] - 2, f[:, 5] - 2, ]).T
         pop.ObjV = f

@@ -451,7 +451,7 @@ def analyze1121_and_output(ps: List[List[RunningParticle]], gantry_number: int, 
                 statistic.add(pt[0])
             result_per_group.append(
                 # x 方向当前动量分散包络，和 3.5 做差，取绝对值
-                np.abs(3.5 * MM - (statistic.max() - statistic.min()) / MM / 2.0)
+                np.abs(3.5 - (statistic.max() - statistic.min()) / MM / 2.0)
             )
             statistic.clear()
 
@@ -460,11 +460,11 @@ def analyze1121_and_output(ps: List[List[RunningParticle]], gantry_number: int, 
                        particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2,
                        particle_number_per_plane_per_dp):
             for j in range(0, particle_number_per_plane_per_dp):
-                pt = ppx_track[i + j]
+                pt = ppy_track[i + j]
                 statistic.add(pt[0])
             result_per_group.append(
                 # x 方向当前动量分散包络，和 3.5 做差，取绝对值
-                np.abs(3.5 * MM - (statistic.max() - statistic.min()) / MM / 2.0)
+                np.abs(3.5 - (statistic.max() - statistic.min()) / MM / 2.0)
             )
             statistic.clear()
 
@@ -533,7 +533,7 @@ def analyze1123_and_output(ps: List[List[RunningParticle]], gantry_number: int, 
                        particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2,
                        particle_number_per_plane_per_dp):
             for j in range(0, particle_number_per_plane_per_dp):
-                pt = ppx_track[i + j]
+                pt = ppy_track[i + j]
                 statistic.add(pt[0])
             outer_statistic.add((statistic.max() - statistic.min()) / MM / 2.0)
             statistic.clear()
@@ -606,7 +606,7 @@ def analyze1127_and_output(ps: List[List[RunningParticle]], gantry_number: int, 
                        particle_number_per_plane_per_dp * len(momentum_dispersion_list) * 2,
                        particle_number_per_plane_per_dp):
             for j in range(0, particle_number_per_plane_per_dp):
-                pt = ppx_track[i + j]
+                pt = ppy_track[i + j]
                 statistic.add(pt[0])
             outer_statistic.add((statistic.max() - statistic.min()) / MM / 2.0)
             statistic.clear()
