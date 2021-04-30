@@ -541,6 +541,20 @@ class P3:
         """
         return anything
 
+    @staticmethod
+    def extract(p3_list: List['P3']) -> Tuple[List[float], List[float],List[float]]:
+        """
+        提取 P3 数组中的 x y z，各自组成数组
+        含义见 P2.extract()
+        """
+        return ([
+            p.x for p in p3_list
+        ], [
+            p.y for p in p3_list
+        ],[
+            p.z for p in p3_list
+        ])
+
 
 class ValueWithDistance(Generic[T]):
     """
