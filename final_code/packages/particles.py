@@ -455,6 +455,9 @@ class RunningParticle:
         )
         return numpy.array(data_list, dtype=numpy_dtype)
 
+    def detailed_info(self)->str:
+        return f"Particle[p={self.position}, v={self.velocity}], rm={self.relativistic_mass}, e={self.e}, speed={self.speed}, distance={self.distance}]"
+
     @staticmethod
     def from_numpy_array_data(numpy_array) -> 'RunningParticle':
         """
@@ -1057,8 +1060,17 @@ class PhaseSpaceParticle:
 
         # xp yp
         relative_velocity = running_particle.velocity - ideal_particle.velocity
-        xp = (coordinate_system.XI * relative_velocity) / ideal_particle.speed
-        yp = (coordinate_system.YI * relative_velocity) / ideal_particle.speed
+        # xp = (coordinate_system.XI * relative_velocity) / ideal_particle.speed
+        # yp = (coordinate_system.YI * relative_velocity) / ideal_particle.speed
+
+        # xp yp 就是求角度，所以修改代码如下
+        # 修改于 2021年5月1日
+        xp = (coordinate_system.XI * relative_velocity) / (
+            math.sqrt(running_particle.speed**2-(coordinate_system.XI * relative_velocity)**2)
+        )
+        yp = (coordinate_system.YI * relative_velocity) / (
+            math.sqrt(running_particle.speed**2-(coordinate_system.YI * relative_velocity)**2)
+        )
 
         # delta
         rm = running_particle.compute_scalar_momentum()
@@ -1194,6 +1206,7 @@ class PhaseSpaceParticle:
 class ParticleFactory:
     """
     质子工厂
+    提供了方便的构造质子/质子群的函数
     """
 
     @staticmethod
@@ -1307,6 +1320,8 @@ class ParticleFactory:
         p.velocity += coordinate_system.XI * (xp * p.speed)
         p.velocity += coordinate_system.YI * (yp * p.speed)
 
+        p.velocity = p.velocity.change_length(p.speed)
+
         return p
 
     @staticmethod
@@ -1337,9 +1352,9 @@ class ParticleFactory:
                               delta_distributed: bool = False,
                               distribution_type="uniform") -> List[PhaseSpaceParticle]:
         """
-        随机产生某种分布的粒子集合
+        随机产生某种分布的质子集合，即 PhaseSpaceParticle 数组
 
-        仅支持正相椭圆/球分布，即不支持有倾斜角的相椭圆
+        仅支持正相椭圆/正相椭球分布，即不支持有倾斜角的相椭圆/相椭球
 
         相椭圆参数由 5 个轴给出，即 x xp y yp delta，例如 3.5mm 7.5mr 3.5mm 7.5mr 0.08
 

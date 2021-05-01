@@ -114,3 +114,8 @@ print(rp) # p=(0.7590848416287488, 0.29220215565669594, 0.4094821302260654),v=(1
 # 一般用于调试
 print(running_particle_random-running_particle_random_copied)
 # p=(0.0, 0.0, 0.0),v=(0.30413818368563283, 0.615853379245629, -0.6068012082706059),v0=-98.0
+
+# 2021年5月1日 新增
+# 函数 detailed_info() 获取粒子全部信息，返回字符串
+print(running_particle_random.detailed_info())
+# Particle[p=(0.40765062815998554, 0.0707454582037097, 0.15717268191231237), v=(1.0, 1.0, 0.0)], rm=1.0, e=1, speed=2.0, distance=0]
