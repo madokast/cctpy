@@ -125,7 +125,7 @@ print("(3,4)*(1,2) =", P2(3, 4)*P2(1, 2))  # 点积 (3,4)*(1,2) = 11.0
 # __truediv__() 除法运算，只能是 矢量/变量 这样的形式，实际计算为 矢量*(1/变量)
 print("(3,4)/2 =", P2(3, 4)/2)  # (3,4)/2 = (1.5, 2.0)
 
-# angle_to(another) 计算矢量到另一个矢量 another 的夹角，以逆时针计算，返回弧度
+# angle_to(another) 计算矢量到另一个矢量 another 的夹角，以逆时针方向计算，返回弧度，范围 [0,360)
 point10, point01 = P2(1, 0), P2(0, 1)
 point10_to_point01 = BaseUtils.radian_to_angle(point10.angle_to(point01))
 point01_to_point10 = BaseUtils.radian_to_angle(point01.angle_to(point10))

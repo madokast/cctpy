@@ -105,7 +105,7 @@ class CCT(Magnet, ApertureObject):
         # self.p2_function = p2_function
         # self.p3_function = p3_function
 
-        # 总匝数
+        # 总分段数目 / 电流元数目
         self.total_disperse_number = self.winding_number * self.disperse_number_per_winding
 
         dispersed_path2: List[List[float]] = [

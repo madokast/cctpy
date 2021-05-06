@@ -5,17 +5,7 @@ CCT 建模优化代码
 日期：2021年4月24日
 """
 
-import multiprocessing  # since v0.1.1 多线程计算
-import time  # since v0.1.1 统计计算时长
-from typing import Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Tuple, TypeVar, Union
-import matplotlib.pyplot as plt
-import math
-import random  # since v0.1.1 随机数
-import sys
-import os  # since v0.1.1 查看CPU核心数
-import numpy
-from scipy.integrate import solve_ivp  # since v0.1.1 ODE45
-import warnings  # since v0.1.1 提醒方法过时
+
 from packages.constants import *
 from packages.base_utils import BaseUtils
 from packages.point import P2, P3, ValueWithDistance
@@ -27,3 +17,12 @@ from packages.cct import CCT
 from packages.particles import *
 from packages.beamline import *
 from packages.plot import *
+try:
+    from packages.gpu_accelerator import GPU_ACCELERATOR
+except Exception as e:
+    print("导入 GPU_ACCELERATOR 类出现异常：",e)
+    print("可能是没有安装好 pycuda，出现此异常不影响 ccpty 核心功能的使用")
+
+
+if __name__ == "__main__":
+    Plot3.__logo__()

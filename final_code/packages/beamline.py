@@ -140,12 +140,13 @@ class Beamline(Line2, Magnet, ApertureObject):
             kinetic_MeV: float,
             s: float = 0.0,
             length: Optional[float] = None,
-            footstep: float = 1 * MM,
+            footstep: float = 5 * MM,
     ) -> List[P3]:
         """
         束流跟踪，运行一个理想粒子，返回轨迹
+        kinetic_MeV 粒子动能，单位 MeV
         s 起点位置
-        length 粒子运行长度，默认运行到束线尾部
+        length 粒子运行长度，默认运动到束线尾部
         footstep 粒子运动步长
         """
         if length is None:
@@ -170,7 +171,10 @@ class Beamline(Line2, Magnet, ApertureObject):
             report: bool = True
     ) -> Tuple[List[P2], List[P2]]:
         """
-        束流跟踪，运行一个相椭圆，返回一个长度 2 的元素，表示相空间 x-xp 平面和 y-yp 平面上粒子投影（单位 mm / mrad）
+        束流跟踪，运行两个相椭圆边界上的粒子，
+        返回一个长度 2 的元组，表示相空间 x-xp 平面和 y-yp 平面上粒子投影（单位 mm / mrad）
+        两个相椭圆，一个位于 xxp 平面，参数为 σx 和 σxp ，动量分散为 delta
+        另一个位于 xxp 平面，参数为 σx 和 σxp ，动量分散为 delta
         x_sigma_mm σx 单位 mm
         xp_sigma_mrad σxp 单位 mrad
         y_sigma_mm σy 单位 mm
@@ -182,6 +186,7 @@ class Beamline(Line2, Magnet, ApertureObject):
         length 粒子运行长度，默认运行到束线尾部
         footstep 粒子运动步长
         concurrency_level 并发等级（使用多少个核心进行粒子跟踪）
+        report 是否打印并行任务计划
         """
         if length is None:
             length = self.trajectory.get_length() - s
@@ -257,10 +262,11 @@ class Beamline(Line2, Magnet, ApertureObject):
         否则即时粒子距离轴线很远，也认为粒子没有超出孔径，
         这是因为粒子不在元件内时，很可能处于另一个大孔径元件中，这样会造成误判。
 
-        注意：这个函数的效率极低！应使用下面的方法
+        注意：这个函数的效率极低！
         """
         for m in self.magnets:
             if isinstance(m, ApertureObject) and m.is_out_of_aperture(point):
+                print(f"beamline在{m}位置超出孔径")
                 return True
 
         return False
@@ -270,8 +276,14 @@ class Beamline(Line2, Magnet, ApertureObject):
     ) -> bool:
         """
         判断一条粒子轨迹是否超出孔径
+
+        注意：这个函数的效率极低！
         """
-        raise NotImplemented
+        for pd in trace_with_distance:
+            if self.is_out_of_aperture(pd.value):
+                return True
+        
+        return False
 
     def get_length(self) -> float:
         """

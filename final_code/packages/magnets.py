@@ -8,7 +8,7 @@ CCT 建模优化代码
 
 import multiprocessing  # since v0.1.1 多线程计算
 import time  # since v0.1.1 统计计算时长
-from typing import Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Tuple, TypeVar, Union
+from typing import Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Sequence, Tuple, TypeVar, Union
 import matplotlib.pyplot as plt
 import math
 import random  # since v0.1.1 随机数
@@ -310,6 +310,13 @@ class Magnet:
         """
         return UniformMagnet(magnetic_field)
 
+    @staticmethod
+    def combine(*magnets) -> 'Magnet':
+        """
+        多个 magnet 组合
+        """
+        return CombinedMagnet(*magnets)
+
 
 class UniformMagnet(Magnet):
     """
@@ -329,6 +336,36 @@ class UniformMagnet(Magnet):
         任意点均产生相同磁场
         """
         return self.magnetic_field.copy()
+
+
+class CombinedMagnet(Magnet):
+    """
+    多个磁铁组合
+    """
+
+    def __init__(self, *magnets) -> None:
+        """
+        构造器
+        输入磁场 magnetic_field
+        """
+        super().__init__()
+        self.magnets: Tuple[Magnet] = []
+        for m in magnets:
+            if isinstance(m,Magnet):
+                self.magnets.append(m)
+            elif isinstance(m,Sequence):
+                self.magnets.append(CombinedMagnet(*m))
+            else:
+                raise ValueError(f"无法构建 CombinedMagnet，{m}未知")
+
+    def magnetic_field_at(self, point: P3) -> P3:
+        """
+        任意点均产生相同磁场
+        """
+        B = P3.zeros()
+        for m in self.magnets:
+            B += m.magnetic_field_at(point)
+        return B
 
 
 class ApertureObject:
@@ -486,3 +523,38 @@ class QS(Magnet, ApertureObject):
             second_gradient=second_gradient,
             aperture_radius=aperture_radius,
         )
+
+    def to_numpy_array(self, numpy_dtype=numpy.float64) -> numpy.ndarray:
+        """
+        将 qs 磁铁转为 numpy 数组，用于 cuda 计算
+        数组格式如下：
+        坐标轴原点 ox oy oz
+        坐标轴XI方向  xx xy xz
+        坐标轴YI方向  yx yy yz
+        坐标轴ZI方向  zx zy zz
+        qs 长度
+        qs 四极场梯度
+        qs 六极场梯度
+        qs 半孔径
+
+        数组长度一共为 16
+        """
+        return numpy.array(
+            self.local_coordinate_system.location.to_list() +
+            self.local_coordinate_system.XI.to_list() +
+            self.local_coordinate_system.YI.to_list() +
+            self.local_coordinate_system.ZI.to_list() +
+            [self.length, self.gradient, self.second_gradient, self.aperture_radius],
+            dtype=numpy_dtype
+        )
+
+    def as_qs(anything) -> 'QS':
+        """
+        仿佛是类型转换
+        实际啥也没做
+        但是 IDE 就能根据返回值做代码提示了
+
+        常用在将 Magnet 转成 QS
+        例如从 Beamline 中取出的 magnets，然后按照真是类型转过去
+        """
+        return anything

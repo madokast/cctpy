@@ -160,4 +160,40 @@ global_path3 = cct.global_path3()
 # 和
 # 电流元的位置 (p[i+1]+p[i])/2
 # 主要目的是为了 CUDA 计算
+# 返回值是两个 numpy 数组
+# 内部使用了 flatten()，将 n*3 的二维数组，转为一维
 
+# p2_function(ksi)
+# 完成 ksi -> P2(ksi,phi) 的映射
+
+
+# p3_function(ksi)
+# 完成 ksi -> P3(x,y,z) 的映射，映射结果显示的是局部坐标系中 cct 线圈
+
+
+# conductor_length() 求 CCT 线圈导体长度
+# line_number 表示导线数目
+# disperse_number_per_winding 计算是，一匝线圈分段数目
+print(cct.conductor_length(line_number=1,disperse_number_per_winding=3600)) # 17.443395580963664
+print(cct.conductor_length(line_number=1,disperse_number_per_winding=360)) # 17.442809870531804
+
+# 类函数 as_cct() 将任意的对象“转为” cct，实际上什么也没做
+# 但是 IDE 就能根据返回值做代码提示
+anything = 123
+anything = CCT.as_cct(anything)
+print(anything) # 123 实际上什么也没做
+
+# 类函数 calculate_a() 计算极角 a
+# 参数为 big_r 和 small_r
+# 可以看到 a ≈ big_r if big_r>>small_r
+print(CCT.calculate_a(100,1)) # 99.99499987499375
+
+
+# 类函数 calculate_eta() 计算 η
+# 参数为 big_r 和 small_r
+
+# 类函数 calculate_cheta() 计算 cosh(η)
+# 参数为 big_r 和 small_r
+
+# 类函数 calculate_sheta() 计算 sinh(η)
+# 参数为 big_r 和 small_r
