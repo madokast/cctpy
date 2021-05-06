@@ -1823,7 +1823,6 @@ class GPU_ACCELERATOR:
         return ret
 
 
-
     def track_multi_particle_beamline_for_magnet_with_multi_qs(
         self, bls: List[Beamline], ps: List[RunningParticle],
             distance: float, footstep: float) -> List[List[RunningParticle]]:
