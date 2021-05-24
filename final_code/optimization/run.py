@@ -1,7 +1,7 @@
 # from visdom import Visdom
 
 from cctpy import *
-from ccpty_cuda import *
+from hust_sc_gantry import HUST_SC_GANTRY
 import time
 import numpy as np
 
@@ -31,8 +31,8 @@ default_gantry = HUST_SC_GANTRY(
     GAP3=0.43188,
     qs3_length=0.24379,
 )
-default_beamline = default_gantry.create_beamline()
-first_bending_length = default_gantry.first_bending_part_length()
+default_beamline = default_gantry.create_total_beamline()
+first_bending_length = default_gantry.create_first_bending_part_beamline().get_length()
 run_distance = default_beamline.get_length() - first_bending_length
 
 second_bending_part_start_point = default_beamline.trajectory.point_at(first_bending_length)
@@ -80,8 +80,8 @@ def run(params: np.ndarray):
     )
 
     print(f"粒子总数{len(ps) * gantry_number}")
-
-    ps_ran_list = ga32.track_multi_particle_beamlime_for_magnet_with_single_qs(
+                       
+    ps_ran_list = ga32.track_multi_particle_beamline_for_magnet_with_multi_qs(
         bls=beamlines,
         ps=ps,
         distance=run_distance,
@@ -94,6 +94,10 @@ def run(params: np.ndarray):
     objs: List[List[float]] = []
     for gid in range(gantry_number):  # ~120
         ps_ran = ps_ran_list[gid]
+        # 不知道为什么，有些粒子的速率 speed 和速度 velocity 差别巨大
+        for p in ps_ran:
+            p.speed=p.velocity.length()
+
         pps_ran = PhaseSpaceParticle.create_from_running_particles(
             ip_ran, ip_ran.get_natural_coordinate_system(), ps_ran
         )
@@ -204,10 +208,7 @@ def create_beamline(param, second_bending_part_start_point, second_bending_part_
         agcct345_outer_small_r=108.5 * MM,  # 83+15
         dicct345_inner_small_r=124.5 * MM,  # 83+30+1
         dicct345_outer_small_r=140.5 * MM,  # 83+45 +2
-    ).create_second_bending_part(
-        start_point=second_bending_part_start_point,
-        start_driect=second_bending_part_start_direct
-    )
+    ).create_second_bending_part_beamline()
 
 
 wins = []  # 画图窗口

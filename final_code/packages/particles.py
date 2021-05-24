@@ -1065,12 +1065,18 @@ class PhaseSpaceParticle:
 
         # xp yp 就是求角度，所以修改代码如下
         # 修改于 2021年5月1日
-        xp = (coordinate_system.XI * relative_velocity) / (
-            math.sqrt(running_particle.speed**2-(coordinate_system.XI * relative_velocity)**2)
-        )
-        yp = (coordinate_system.YI * relative_velocity) / (
-            math.sqrt(running_particle.speed**2-(coordinate_system.YI * relative_velocity)**2)
-        )
+        try:
+            xp = (coordinate_system.XI * relative_velocity) / (
+                math.sqrt(running_particle.speed**2-(coordinate_system.XI * relative_velocity)**2)
+            )
+            yp = (coordinate_system.YI * relative_velocity) / (
+                math.sqrt(running_particle.speed**2-(coordinate_system.YI * relative_velocity)**2)
+            )
+        except Exception as e:
+            print(f"异常{e}")
+            print(f"ip={ideal_particle}")
+            print(f"rp={running_particle}")
+            print(f"lcs={coordinate_system}")
 
         # delta
         rm = running_particle.compute_scalar_momentum()

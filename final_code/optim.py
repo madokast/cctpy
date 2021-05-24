@@ -3,9 +3,9 @@ import os
 import time
 
 import geatpy as ea
-from geatpy_problem import Myproblem
+from optimization.geatpy_problem import Myproblem
 from cctpy import BaseUtils
-from run import VIZ_PORT
+from optimization.run import VIZ_PORT
 
 
 # def runviz():

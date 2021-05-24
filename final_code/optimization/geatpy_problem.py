@@ -1,5 +1,5 @@
 import geatpy as ea
-from run import run
+from optimization.run import run
 
 
 class Myproblem(ea.Problem):
