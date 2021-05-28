@@ -47,6 +47,17 @@ def create_gantry_beamline(param=[]):
     q1 = param[14] if len(param) > 0 else 0
     q2 = param[15] if len(param) > 0 else 0
 
+    
+    agcct345_tilt_angle1 = param[16] if len(param) > 0 else 90
+    agcct345_tilt_angle3 = param[17] if len(param) > 0 else 90
+    agcct345_tilt_angle4 = param[18] if len(param) > 0 else 90
+
+    agcct345_current = param[19] if len(param) > 0 else -7000
+
+    agcct3_winding_number = param[20] if len(param) > 0 else 25
+    agcct4_winding_number = param[21] if len(param) > 0 else 40
+    agcct5_winding_number = param[22] if len(param) > 0 else 34
+
     ####################################
     DL1 = 1.592
     GAP1 = 0.5
@@ -74,15 +85,16 @@ def create_gantry_beamline(param=[]):
     dicct12_outer_small_r = 140.5 * MM - 20 * MM  # 83+45 +2
 
     dicct345_tilt_angles = [30, 88.773,	98.139, 91.748]
-    agcct345_tilt_angles = [101.792, 30, 62.677,	89.705]
+    agcct345_tilt_angles = [agcct345_tilt_angle1, 30, agcct345_tilt_angle3,	agcct345_tilt_angle4]
     dicct345_current = 9409.261
-    agcct345_current = -7107.359
-    agcct3_winding_number = 25
-    agcct4_winding_number = 40
-    agcct5_winding_number = 34
-    agcct3_bending_angle = -67.5 * (25 / (25 + 40 + 34))
-    agcct4_bending_angle = -67.5 * (40 / (25 + 40 + 34))
-    agcct5_bending_angle = -67.5 * (34 / (25 + 40 + 34))
+    # agcct345_current = -7107.359
+    # agcct3_winding_number = 25
+    # agcct4_winding_number = 40
+    # agcct5_winding_number = 34
+    agcct345_winding_number = agcct3_winding_number+agcct4_winding_number+agcct5_winding_number
+    agcct3_bending_angle = -67.5 * (agcct3_winding_number / (agcct345_winding_number))
+    agcct4_bending_angle = -67.5 * (agcct4_winding_number / (agcct345_winding_number))
+    agcct5_bending_angle = -67.5 * (agcct5_winding_number / (agcct345_winding_number))
 
     agcct345_inner_small_r = 92.5 * MM + 0.1*MM  # 92.5
     agcct345_outer_small_r = 108.5 * MM + 0.1*MM  # 83+15
@@ -90,7 +102,7 @@ def create_gantry_beamline(param=[]):
     dicct345_outer_small_r = 140.5 * MM + 0.1*MM  # 83+45 +2
 
     dicct345_winding_number = 128
-    part_per_winding = 120
+    part_per_winding = 60
     cct345_big_r = 0.95
     cct12_big_r = 0.95
     return (Beamline.set_start_point(P2.origin())  # 设置束线的起点
@@ -239,7 +251,7 @@ def run(params: np.ndarray):
         bls=beamlines,
         ps=ps,
         distance=total_beamline_length,
-        footstep=20 * MM
+        footstep=50 * MM
     )
 
     # 统计器

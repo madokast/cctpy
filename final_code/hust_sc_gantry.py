@@ -384,5 +384,7 @@ if __name__ == "__main__":
     s = g.create_second_bending_part_beamline()
     t = g.create_total_beamline()
 
-    Plot2.plot_beamline(t)
-    Plot2.show()
+    print(f.get_length())
+
+    # Plot2.plot_beamline(t)
+    # Plot2.show()

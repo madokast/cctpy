@@ -107,6 +107,7 @@ class P2:
     def rotate(self, phi: float) -> "P2":
         """
         矢量旋转，返回新矢量
+        正角表示逆时针旋转
         """
         return self._matmul(P2._rotation_matrix(phi))
 

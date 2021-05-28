@@ -244,7 +244,7 @@ class Beamline(Line2, Magnet, ApertureObject):
         xs = [pp.project_to_xxp_plane() / MM for pp in pp_x_end]
         ys = [pp.project_to_yyp_plane() / MM for pp in pp_y_end]
 
-        s = BaseUtils.Statistic()
+        s: BaseUtils.Statistic = BaseUtils.Statistic()
 
         print(
             f"delta={delta}," +
@@ -282,7 +282,7 @@ class Beamline(Line2, Magnet, ApertureObject):
         for pd in trace_with_distance:
             if self.is_out_of_aperture(pd.value):
                 return True
-        
+
         return False
 
     def get_length(self) -> float:
@@ -342,6 +342,32 @@ class Beamline(Line2, Magnet, ApertureObject):
         old_len = self.trajectory.get_length()
         self.trajectory.add_strait_line(length=length)
         self.elements.append((old_len, None, length))
+
+        return self
+
+    def append_straight_dipole_magnet(
+            self,
+            magnetic_field: float,
+            length: float,
+            aperture_radius: float,
+            # field_direct: P2 = P2.y_direct()
+    ) -> "Beamline":
+        """
+        尾加直线二极铁
+        """
+        old_length = self.trajectory.get_length()
+        self.trajectory.add_strait_line(length=length)
+
+        lum = LocalUniformMagnet.create_local_uniform_magnet_along(
+            trajectory=self.trajectory,
+            s=old_length,
+            length=length,
+            magnetic_field=magnetic_field,
+            aperture_radius=aperture_radius,
+        )
+
+        self.magnets.append(lum)
+        self.elements.append((old_length, lum, length))
 
         return self
 
@@ -667,4 +693,3 @@ class Beamline(Line2, Magnet, ApertureObject):
 
     def __str__(self) -> str:
         return f"beamline(magnet_size={len(self.magnets)}, traj_len={self.trajectory.get_length()})"
-

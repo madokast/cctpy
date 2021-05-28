@@ -2,16 +2,10 @@
 2021年5月24日
 
 矫正踢腿磁铁设计
-
-现在的情况是这样的：
-前偏转段优化后，不同动量分散下的相椭圆形状、Δx、Δy、Δxp都可以，唯独 Δxp 会变动，大约是 4mr/%
-现在打算加入矫正踢腿磁铁
-
-先看看没有动量分散下，全段情况
 """
 
 # 因为要使用父目录的 cctpy 所以加入
-from os import error, path
+from os import error, path, system
 import sys
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
 from work.A01run import *
@@ -150,7 +144,14 @@ if __name__ == "__main__":
     dicct345_winding_number=128
     part_per_winding=120
 
-    bl = Beamline = (
+
+    ms = [0,0.05,0.1,0.15]
+    cs = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-']
+    delta = 0.0
+
+    for i in range(len(ms)):
+        straight_dipole_magnet_filed = ms[i]
+        bl = Beamline = (
                 Beamline.set_start_point(P2.origin())  # 设置束线的起点
                 # 设置束线中第一个漂移段（束线必须以漂移段开始）
                 .first_drift(direct=P2.x_direct(), length=DL1)
@@ -204,80 +205,67 @@ if __name__ == "__main__":
                     currents=[dicct12_current, agcct12_current],
                     disperse_number_per_winding=part_per_winding
                 )
-                .append_drift(DL1-0.1)
+                .append_drift(DL1-0.3)
                 .append_straight_dipole_magnet(
-                    magnetic_field=-0.1,
+                    magnetic_field=straight_dipole_magnet_filed,
                     length=0.2,
                     aperture_radius=60*MM
                 )
+                .append_drift(0.1)
                 # 第二段
-                .append_drift(DL2-0.1)
-                .append_agcct(
-                    big_r=0.95,
-                    small_rs=[dicct345_outer_small_r, dicct345_inner_small_r,
-                              agcct345_outer_small_r, agcct345_inner_small_r],
-                    bending_angles=[agcct3_bending_angle,
-                                    agcct4_bending_angle, agcct5_bending_angle],
-                    tilt_angles=[dicct345_tilt_angles,
-                                 agcct345_tilt_angles],
-                    winding_numbers=[[dicct345_winding_number], [
-                        agcct3_winding_number, agcct4_winding_number, agcct5_winding_number]],
-                    currents=[dicct345_current, agcct345_current],
-                    disperse_number_per_winding=part_per_winding
-                )
-                .append_drift(GAP3)
-                .append_qs(
-                    length=qs3_length,
-                    gradient=qs3_gradient,
-                    second_gradient=qs3_second_gradient,
-                    aperture_radius=qs3_aperture_radius
-                )
-                .append_drift(GAP3)
-                .append_agcct(
-                    big_r=0.95,
-                    small_rs=[dicct345_outer_small_r, dicct345_inner_small_r,
-                              agcct345_outer_small_r, agcct345_inner_small_r],
-                    bending_angles=[agcct5_bending_angle,
-                                    agcct4_bending_angle, agcct3_bending_angle],
-                    tilt_angles=[dicct345_tilt_angles,
-                                 agcct345_tilt_angles],
-                    winding_numbers=[[dicct345_winding_number], [
-                        agcct5_winding_number, agcct4_winding_number, agcct3_winding_number]],
-                    currents=[dicct345_current, agcct345_current],
-                    disperse_number_per_winding=part_per_winding
-                )
-                .append_drift(DL2)
-            )
+                # .append_drift(DL2)
+                # .append_agcct(
+                #     big_r=0.95,
+                #     small_rs=[dicct345_outer_small_r, dicct345_inner_small_r,
+                #               agcct345_outer_small_r, agcct345_inner_small_r],
+                #     bending_angles=[agcct3_bending_angle,
+                #                     agcct4_bending_angle, agcct5_bending_angle],
+                #     tilt_angles=[dicct345_tilt_angles,
+                #                  agcct345_tilt_angles],
+                #     winding_numbers=[[dicct345_winding_number], [
+                #         agcct3_winding_number, agcct4_winding_number, agcct5_winding_number]],
+                #     currents=[dicct345_current, agcct345_current],
+                #     disperse_number_per_winding=part_per_winding
+                # )
+                # .append_drift(GAP3)
+                # .append_qs(
+                #     length=qs3_length,
+                #     gradient=qs3_gradient,
+                #     second_gradient=qs3_second_gradient,
+                #     aperture_radius=qs3_aperture_radius
+                # )
+                # .append_drift(GAP3)
+                # .append_agcct(
+                #     big_r=0.95,
+                #     small_rs=[dicct345_outer_small_r, dicct345_inner_small_r,
+                #               agcct345_outer_small_r, agcct345_inner_small_r],
+                #     bending_angles=[agcct5_bending_angle,
+                #                     agcct4_bending_angle, agcct3_bending_angle],
+                #     tilt_angles=[dicct345_tilt_angles,
+                #                  agcct345_tilt_angles],
+                #     winding_numbers=[[dicct345_winding_number], [
+                #         agcct5_winding_number, agcct4_winding_number, agcct3_winding_number]],
+                #     currents=[dicct345_current, agcct345_current],
+                #     disperse_number_per_winding=part_per_winding
+                # )
+                # .append_drift(DL2)
+        )
 
-    
-
-    # beamline_phase_ellipse_multi_delta(
-    #     bl,5,[-0.005,0,0.005]
-    # )
-
-    # Plot2.plot_beamline(bl)
-    # Plot2.show()
-    
-    # kms = [200,205,210,215,220,225]
-    kms = [200]
-    cs = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-']
-    cs = ['r-']
-    for i in range(len(kms)):
-        ip = ParticleFactory.create_proton_along(bl,0,kms[i])
-        tps = ParticleRunner.run_get_all_info(ip,bl,bl.get_length(),10*MM)
-        x = []
-        y = []
-        for p in tps:
-            ipc = ParticleFactory.create_proton_along(bl,s=p.distance,kinetic_MeV=kms[i])
-            pp = PhaseSpaceParticle.create_from_running_particle(
-                ideal_particle=ipc,
-                coordinate_system=ipc.get_natural_coordinate_system(),
-                running_particle=p
-            )
-            x.append(P2(p.distance,pp.x))
-            y.append(P2(p.distance,pp.y))
         
-        Plot2.plot_p2s(x,describe=cs[i])
-    Plot2.legend(*[str(s) for s in kms])
+        xs,ys = bl.track_phase_ellipse(
+            x_sigma_mm=3.5,xp_sigma_mrad=7.5,
+            y_sigma_mm=3.5,yp_sigma_mrad=7.5,
+            delta=delta,
+            particle_number=8,
+            kinetic_MeV=215,
+            concurrency_level=16,
+            footstep=20*MM
+        )
+
+        Plot2.plot_p2s(ys,describe=cs[i],circle=True)
+    
+    Plot2.equal()
+    Plot2.legend(*[str(s)+"T" for s in ms])
+    Plot2.info("y/mm","yp/mr","dp="+str(int(delta*100))+"%")
     Plot2.show()
 

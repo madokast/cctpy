@@ -338,6 +338,81 @@ class UniformMagnet(Magnet):
         return self.magnetic_field.copy()
 
 
+class LocalUniformMagnet(Magnet):
+    """
+    局部圆柱区域产生均匀磁场的磁铁，可以看作一个直线二极磁铁
+    local_coordinate_system 局部坐标系
+        局部坐标系的原点即二极磁铁的起点
+        局部坐标系的 z 方向即二极磁铁延申方向
+        局部坐标系的 y 方向即磁场方向
+    length 磁铁长度
+    aperture_radius 磁铁孔径，磁铁外部磁场为零
+    magnetic_field 磁场大小，标量。磁场方向由 local_coordinate_system 确定
+    """
+
+    def __init__(
+            self,
+            local_coordinate_system: LocalCoordinateSystem,
+            length: float,
+            aperture_radius: float,
+            magnetic_field: float) -> None:
+        """
+        构造器
+        输入磁场 magnetic_field
+        """
+        super().__init__()
+        self.local_coordinate_system: LocalCoordinateSystem = local_coordinate_system
+        self.length: float = float(length)
+        self.aperture_radius = float(aperture_radius)
+        self.magnetic_field = float(magnetic_field)
+
+        self.magnetic_field_vector: P3 = self.local_coordinate_system.YI * self.magnetic_field
+
+    def magnetic_field_at(self, point: P3) -> P3:
+        """
+        point 全局坐标系的点
+        """
+        lp = self.local_coordinate_system.point_to_local_coordinate(point)
+        if lp.z < 0 or lp.z > self.length:
+            return P3.zeros()
+        else:
+            if (abs(lp.x) > self.aperture_radius
+                or abs(lp.y) > self.aperture_radius
+                or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
+                ):
+                return P3.zeros()
+            else:
+                return self.magnetic_field_vector.copy()
+
+    @staticmethod
+    def create_local_uniform_magnet_along(
+            trajectory: Line2,
+            s: float,
+            magnetic_field: float,
+            length: float,
+            aperture_radius: float,
+    ) -> "LocalUniformMagnet":
+        """
+        在设计轨道上创建 LocalUniformMagnet
+        """
+        origin: P2 = trajectory.point_at(s)
+        z_direct: P2 = trajectory.direct_at(s)
+        x_direct: P2 = z_direct.rotate(BaseUtils.angle_to_radian(90))
+
+        lcs: LocalCoordinateSystem = LocalCoordinateSystem(
+            location=origin.to_p3(),
+            x_direction=x_direct.to_p3(),
+            z_direction=z_direct.to_p3(),
+        )
+
+        return LocalUniformMagnet(
+            local_coordinate_system=lcs,
+            length=length,
+            aperture_radius=aperture_radius,
+            magnetic_field=magnetic_field
+        )
+
+
 class CombinedMagnet(Magnet):
     """
     多个磁铁组合
@@ -351,9 +426,9 @@ class CombinedMagnet(Magnet):
         super().__init__()
         self.magnets: Tuple[Magnet] = []
         for m in magnets:
-            if isinstance(m,Magnet):
+            if isinstance(m, Magnet):
                 self.magnets.append(m)
-            elif isinstance(m,Sequence):
+            elif isinstance(m, Sequence):
                 self.magnets.append(CombinedMagnet(*m))
             else:
                 raise ValueError(f"无法构建 CombinedMagnet，{m}未知")

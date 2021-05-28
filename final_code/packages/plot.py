@@ -126,6 +126,8 @@ class Plot3:
                 Plot3.plot_qs(b, d)
             elif isinstance(b, CCT):
                 Plot3.plot_cct(b, d)
+            elif isinstance(b, LocalUniformMagnet):
+                Plot3.plot_local_uniform_magnet(b, d)
             else:
                 print(f"无法绘制{b}")
 
@@ -184,6 +186,47 @@ class Plot3:
         ]
         back_circle = [
             qs.local_coordinate_system.point_to_global_coordinate(p)
+            for p in back_circle_local
+        ]
+
+        Plot3.plot_p3s(front_circle, describe)
+        Plot3.plot_p3s(mid_circle, describe)
+        Plot3.plot_p3s(back_circle, describe)
+
+        # 画轴线
+        for i in range(0, 360, 10):
+            Plot3.plot_p3s([front_circle[i], back_circle[i]], describe)
+
+    @staticmethod
+    def plot_local_uniform_magnet(local_uniform_magnet: LocalUniformMagnet, describe="r-") -> None:
+        """
+        绘制 LocalUniformMagnet
+        """
+        # 前中后三个圈
+        front_circle_local = [
+            P3(
+                local_uniform_magnet.aperture_radius * math.cos(i / 180 * numpy.pi),
+                local_uniform_magnet.aperture_radius * math.sin(i / 180 * numpy.pi),
+                0.0,
+            )
+            for i in range(360)
+        ]
+
+        mid_circle_local = [p + P3(0, 0, local_uniform_magnet.length / 2)
+                            for p in front_circle_local]
+        back_circle_local = [p + P3(0, 0, local_uniform_magnet.length)
+                             for p in front_circle_local]
+        # 转到全局坐标系中
+        front_circle = [
+            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(p)
+            for p in front_circle_local
+        ]
+        mid_circle = [
+            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(p)
+            for p in mid_circle_local
+        ]
+        back_circle = [
+            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(p)
             for p in back_circle_local
         ]
 
@@ -336,6 +379,8 @@ class Plot2:
                 Plot2.plot_cct_outline(param1, describe=describe)
             elif isinstance(param1, QS):
                 Plot2.plot_qs(param1, describe=describe)
+            elif isinstance(param1, LocalUniformMagnet):
+                Plot2.plot_local_uniform_magnet(param1, describe=describe)
             elif isinstance(param1, Beamline):
                 Plot2.plot_beamline(param1, describes=["k-", "r-"])
             elif isinstance(param1, Line2):
@@ -527,6 +572,29 @@ class Plot2:
         Plot2.plot_p2s(outline_2d, describe)
 
     @staticmethod
+    def plot_local_uniform_magnet(local_uniform_magnet: LocalUniformMagnet, describe="r-") -> None:
+        """
+        绘制 LocalUniformMagnet
+        """
+        length = local_uniform_magnet.length
+        aper = local_uniform_magnet.aperture_radius
+        lsc = local_uniform_magnet.local_coordinate_system
+        origin = lsc.location
+
+        outline = [
+            origin,
+            origin + lsc.XI * aper,
+            origin + lsc.XI * aper + lsc.ZI * length,
+            origin - lsc.XI * aper + lsc.ZI * length,
+            origin - lsc.XI * aper,
+            origin,
+        ]
+
+
+        outline_2d = [p.to_p2() for p in outline]
+        Plot2.plot_p2s(outline_2d, describe)
+
+    @staticmethod
     def plot_qs_straight(location: float, qs: QS, length: float, describe="k-") -> None:
         """
         绘制 qs
@@ -548,6 +616,27 @@ class Plot2:
                        describe=describe)
 
     @staticmethod
+    def plot_local_uniform_magnet_straight(location: float, local_uniform_magnet: LocalUniformMagnet, length: float, describe="k-") -> None:
+        """
+        绘制 local_uniform_magnet
+        轨道绘制为直线，配合 plot_beamline_straight
+        """
+        start_point = P2(x=location)
+        x = P2.x_direct()
+        y = None
+
+        if local_uniform_magnet.gradient >= 0:
+            y = P2.y_direct()
+        else:
+            y = -P2.y_direct()
+
+        p1 = start_point + x*length
+        p2 = p1 + y*local_uniform_magnet.aperture_radius
+        p3 = start_point + y*local_uniform_magnet.aperture_radius
+        Plot2.plot_p2s([start_point, p1, p2, p3, start_point],
+                       describe=describe)
+
+    @staticmethod
     def plot_beamline(beamline: Beamline, describes=["r-"]) -> None:
         """
         绘制 beamline
@@ -562,6 +651,8 @@ class Plot2:
                 Plot2.plot_qs(b, d)
             elif isinstance(b, CCT):
                 Plot2.plot_cct_outline(b, d)
+            elif isinstance(b, LocalUniformMagnet):
+                Plot2.plot_local_uniform_magnet(b, d)
             else:
                 print(f"无法绘制{b}")
         Plot2.plot_line2(beamline.trajectory, describe=describes[0])
@@ -589,6 +680,8 @@ class Plot2:
                     Plot2.plot_qs_straight(loc, b, length, describe=d)
                 elif isinstance(b, CCT):
                     Plot2.plot_cct_outline_straight(loc, b, length, describe=d)
+                elif isinstance(b, LocalUniformMagnet):
+                    Plot2.plot_local_uniform_magnet_straight(loc, b, length, describe=d)
                 else:
                     print(f"无法绘制{b}")
         Plot2.plot_p2s(
@@ -687,7 +780,7 @@ class Plot2:
             x_label: str = "",
             y_label: str = "",
             title: str = "",
-            font_size: int = 12,
+            font_size: int = 24,
             font_family: str = "Times New Roman",
     ) -> NoReturn:
         """
@@ -709,7 +802,7 @@ class Plot2:
         plt.yticks(fontproperties=font_family, size=font_size)
 
     @staticmethod
-    def legend(*labels: Tuple, font_size: int = 12, font_family: str = "Times New Roman") -> NoReturn:
+    def legend(*labels: Tuple, font_size: int = 24, font_family: str = "Times New Roman") -> NoReturn:
         """
         设置图例
         since v0.1.1

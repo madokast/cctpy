@@ -2,12 +2,6 @@
 2021年5月24日
 
 矫正踢腿磁铁设计
-
-现在的情况是这样的：
-前偏转段优化后，不同动量分散下的相椭圆形状、Δx、Δy、Δxp都可以，唯独 Δxp 会变动，大约是 4mr/%
-现在打算加入矫正踢腿磁铁
-
-先看看没有动量分散下，全段情况
 """
 
 # 因为要使用父目录的 cctpy 所以加入
@@ -16,50 +10,6 @@ import sys
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
 from work.A01run import *
 from cctpy import *
-
-
-def beamline_phase_ellipse_multi_delta(bl: Beamline, particle_number: int,
-                                       dps: List[float], describles: str = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-'],
-                                       foot_step: float = 20*MM, report: bool = True):
-    if len(dps) > len(describles):
-        print(
-            f'describles(size={len(describles)}) 长度应大于等于 dps(size={len(dps)})')
-    xs = []
-    ys = []
-    for dp in dps:
-        x, y = bl.track_phase_ellipse(
-            x_sigma_mm=3.5, xp_sigma_mrad=7.5,
-            y_sigma_mm=3.5, yp_sigma_mrad=7.5,
-            delta=dp, particle_number=particle_number,
-            kinetic_MeV=215, concurrency_level=16,
-            footstep=foot_step,
-            report=report
-        )
-        xs.append(x + [x[0]])
-        ys.append(y + [y[0]])
-
-    plt.subplot(121)
-
-    for i in range(len(dps)):
-        plt.plot(*P2.extract(xs[i]), describles[i])
-    plt.xlabel(xlabel='x/mm')
-    plt.ylabel(ylabel='xp/mr')
-    plt.title(label='x-plane')
-    plt.legend(['dp'+str(int(dp*1000)/10) for dp in dps])
-    plt.axis("equal")
-
-    plt.subplot(122)
-    for i in range(len(dps)):
-        plt.plot(*P2.extract(ys[i]), describles[i])
-    plt.xlabel(xlabel='y/mm')
-    plt.ylabel(ylabel='yp/mr')
-    plt.title(label='y-plane')
-    plt.legend(['dp'+str(int(dp*1000)/10) for dp in dps])
-    plt.axis("equal")
-
-    plt.show()
-
-
 
 if __name__ == "__main__":
     BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
@@ -150,7 +100,17 @@ if __name__ == "__main__":
     dicct345_winding_number=128
     part_per_winding=120
 
-    bl = Beamline = (
+
+    # deltas = BaseUtils.list_multiply([-4,-2,0,2,4],0.01)
+    fields = BaseUtils.list_multiply([-20,-15,-10,-5,0],0.01)
+    cs = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-']
+    cs_infos = ["红","黄","蓝","黑","绿","青","紫"]
+    delta = 0.0
+    x_plane = False
+
+    for i in range(len(fields)):
+        straight_dipole_magnet_filed = fields[i]
+        bl = Beamline = (
                 Beamline.set_start_point(P2.origin())  # 设置束线的起点
                 # 设置束线中第一个漂移段（束线必须以漂移段开始）
                 .first_drift(direct=P2.x_direct(), length=DL1)
@@ -206,7 +166,7 @@ if __name__ == "__main__":
                 )
                 .append_drift(DL1-0.1)
                 .append_straight_dipole_magnet(
-                    magnetic_field=-0.1,
+                    magnetic_field=straight_dipole_magnet_filed,
                     length=0.2,
                     aperture_radius=60*MM
                 )
@@ -249,35 +209,40 @@ if __name__ == "__main__":
                 .append_drift(DL2)
             )
 
-    
+        ip0 = ParticleFactory.create_proton_along(bl,kinetic_MeV=215)
+        ip1 = ParticleFactory.create_proton_along(bl,kinetic_MeV=215,s=bl.get_length())
 
-    # beamline_phase_ellipse_multi_delta(
-    #     bl,5,[-0.005,0,0.005]
-    # )
+        pps0 = PhaseSpaceParticle.phase_space_particles_along_positive_ellipse_in_plane(
+            plane_id=PhaseSpaceParticle.XXP_PLANE if x_plane else PhaseSpaceParticle.YYP_PLANE,
+            xMax=3.5*MM,xpMax=7.5*MRAD,delta=delta,number=16,
+        )
 
-    # Plot2.plot_beamline(bl)
-    # Plot2.show()
-    
-    # kms = [200,205,210,215,220,225]
-    kms = [200]
-    cs = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-']
-    cs = ['r-']
-    for i in range(len(kms)):
-        ip = ParticleFactory.create_proton_along(bl,0,kms[i])
-        tps = ParticleRunner.run_get_all_info(ip,bl,bl.get_length(),10*MM)
-        x = []
-        y = []
-        for p in tps:
-            ipc = ParticleFactory.create_proton_along(bl,s=p.distance,kinetic_MeV=kms[i])
-            pp = PhaseSpaceParticle.create_from_running_particle(
-                ideal_particle=ipc,
-                coordinate_system=ipc.get_natural_coordinate_system(),
-                running_particle=p
-            )
-            x.append(P2(p.distance,pp.x))
-            y.append(P2(p.distance,pp.y))
+        rps = ParticleFactory.create_from_phase_space_particles(
+            ideal_particle=ip0,
+            coordinate_system=ip0.get_natural_coordinate_system(),
+            phase_space_particles=pps0
+        )
+
+
+        all_info_list:List[List[RunningParticle]] = ParticleRunner.run_get_all_info(
+            p=rps,m=bl,length=bl.get_length(),footstep=20*MM,concurrency_level=16
+        )
+
         
-        Plot2.plot_p2s(x,describe=cs[i])
-    Plot2.legend(*[str(s) for s in kms])
+        for all_info in all_info_list:
+            plots:List[P2] = []
+            for rp_current in all_info:
+                d = rp_current.distance
+                ip_current  = ParticleFactory.create_proton_along(bl,kinetic_MeV=215,s=d)
+                pp_current = PhaseSpaceParticle.create_from_running_particle(
+                    ideal_particle=ip_current,
+                    coordinate_system=ip_current.get_natural_coordinate_system(),
+                    running_particle=rp_current
+                )
+                plots.append(P2(d,pp_current.x/MM))
+            Plot2.plot_p2s(plots,describe=cs[i])
+        print(cs_infos[i] + "--" + "磁场=" +str(straight_dipole_magnet_filed) + "T" + "--" + "delta=" + str(delta))
+    
+    Plot2.info("s/m","x/mm" if x_plane else "y/mm","")
     Plot2.show()
 

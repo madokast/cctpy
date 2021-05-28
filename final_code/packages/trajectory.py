@@ -177,7 +177,7 @@ class Trajectory(Line2):
         def __init__(self, start_point: P2):
             self.start_point = start_point
 
-        def first_line(self, direct: P2, length: float) -> "Trajectory":
+        def first_line(self, direct: P2 = P2.x_direct(), length: float = 1.0) -> "Trajectory":
             """
             设置 Trajectory 第一条直线段
             注意：Trajectory 只能以直线开头，不能以圆弧开头
@@ -185,7 +185,7 @@ class Trajectory(Line2):
             return Trajectory(StraightLine2(length, direct, self.start_point))
 
     @staticmethod
-    def set_start_point(start_point: P2) -> 'Trajectory.__TrajectoryBuilder':
+    def set_start_point(start_point: P2 = P2.origin()) -> 'Trajectory.__TrajectoryBuilder':
         """
         设置 Trajectory 起点
         """

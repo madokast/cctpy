@@ -150,7 +150,14 @@ if __name__ == "__main__":
     dicct345_winding_number=128
     part_per_winding=120
 
-    bl = Beamline = (
+
+    ms = [0,0.05,0.1,0.15]
+    cs = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-']
+    delta = -0.06
+
+    for i in range(len(ms)):
+        straight_dipole_magnet_filed = ms[i]
+        bl = Beamline = (
                 Beamline.set_start_point(P2.origin())  # 设置束线的起点
                 # 设置束线中第一个漂移段（束线必须以漂移段开始）
                 .first_drift(direct=P2.x_direct(), length=DL1)
@@ -206,7 +213,7 @@ if __name__ == "__main__":
                 )
                 .append_drift(DL1-0.1)
                 .append_straight_dipole_magnet(
-                    magnetic_field=-0.1,
+                    magnetic_field=straight_dipole_magnet_filed,
                     length=0.2,
                     aperture_radius=60*MM
                 )
@@ -248,36 +255,21 @@ if __name__ == "__main__":
                 )
                 .append_drift(DL2)
             )
-
-    
-
-    # beamline_phase_ellipse_multi_delta(
-    #     bl,5,[-0.005,0,0.005]
-    # )
-
-    # Plot2.plot_beamline(bl)
-    # Plot2.show()
-    
-    # kms = [200,205,210,215,220,225]
-    kms = [200]
-    cs = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-']
-    cs = ['r-']
-    for i in range(len(kms)):
-        ip = ParticleFactory.create_proton_along(bl,0,kms[i])
-        tps = ParticleRunner.run_get_all_info(ip,bl,bl.get_length(),10*MM)
-        x = []
-        y = []
-        for p in tps:
-            ipc = ParticleFactory.create_proton_along(bl,s=p.distance,kinetic_MeV=kms[i])
-            pp = PhaseSpaceParticle.create_from_running_particle(
-                ideal_particle=ipc,
-                coordinate_system=ipc.get_natural_coordinate_system(),
-                running_particle=p
-            )
-            x.append(P2(p.distance,pp.x))
-            y.append(P2(p.distance,pp.y))
         
-        Plot2.plot_p2s(x,describe=cs[i])
-    Plot2.legend(*[str(s) for s in kms])
+        xs,ys = bl.track_phase_ellipse(
+            x_sigma_mm=3.5,xp_sigma_mrad=7.5,
+            y_sigma_mm=3.5,yp_sigma_mrad=7.5,
+            delta=delta,
+            particle_number=8,
+            kinetic_MeV=215,
+            concurrency_level=16,
+            footstep=20*MM
+        )
+
+        Plot2.plot_p2s(xs,describe=cs[i],circle=True)
+    
+    Plot2.equal()
+    Plot2.legend(*[str(s)+"T" for s in ms])
+    Plot2.info("x/mm","y/mm","dp="+str(int(delta*100))+"%")
     Plot2.show()
 

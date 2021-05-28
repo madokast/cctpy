@@ -1,5 +1,5 @@
 import geatpy as ea
-from work.run202105210001 import run
+from work.A01run import run
 
 
 class Myproblem(ea.Problem):

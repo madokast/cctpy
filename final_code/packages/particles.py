@@ -701,8 +701,10 @@ class ParticleRunner:
 
     @staticmethod
     def run_get_all_info(
-            p: RunningParticle, m: Magnet, length: float, footstep: float = 1 * MM
-    ) -> List[RunningParticle]:
+            p: Union[RunningParticle,List[RunningParticle]], 
+            m: Magnet, length: float, footstep: float = 1 * MM,
+            concurrency_level: Optional[int] = None,report:bool=False
+    ) -> Union[List[RunningParticle],List[List[RunningParticle]]]:
         """
         让粒子 p 在磁场 m 中运动 length 距离，步长 footstep
         获得粒子全部信息
@@ -717,32 +719,54 @@ class ParticleRunner:
         -------
         refactor v0.1.1 runge kutta
         """
-        distance0 = p.distance
+        if isinstance(p, RunningParticle):
+            distance0 = p.distance
 
-        dt = footstep / p.speed
-        t_end = length / p.speed
-        Y0 = numpy.array([p.position, p.velocity])
-        func = ParticleRunner.__callback_for_runge_kutta4(
-            particle=p, magnet=m)
-        ts, Ys = BaseUtils.runge_kutta4(
-            t0=0.0, t_end=t_end, Y0=Y0, y_derived_function=func, dt=dt, record=True)
-        p.distance += length
+            dt = footstep / p.speed
+            t_end = length / p.speed
+            Y0 = numpy.array([p.position, p.velocity])
+            func = ParticleRunner.__callback_for_runge_kutta4(
+                particle=p, magnet=m)
+            ts, Ys = BaseUtils.runge_kutta4(
+                t0=0.0, t_end=t_end, Y0=Y0, y_derived_function=func, dt=dt, record=True)
+            p.distance += length
 
-        all_info: List[RunningParticle] = []
+            all_info: List[RunningParticle] = []
 
-        for i in range(len(ts)):
-            t: float = ts[i]
-            pos: P3 = Ys[i][0]
-            vel: P3 = Ys[i][1]
+            for i in range(len(ts)):
+                t: float = ts[i]
+                pos: P3 = Ys[i][0]
+                vel: P3 = Ys[i][1]
 
-            this_p = p.copy()
-            this_p.position = pos
-            this_p.velocity = vel
-            this_p.distance = distance0 + t * this_p.speed
+                this_p = p.copy()
+                this_p.position = pos
+                this_p.velocity = vel
+                this_p.distance = distance0 + t * this_p.speed
 
-            all_info.append(this_p)
+                all_info.append(this_p)
 
-        return all_info
+            return all_info
+        else: # p is list[p]
+            if concurrency_level is None:
+                concurrency_level = os.cpu_count()
+            if concurrency_level == 1:
+                returns:List[List[RunningParticle]] = []
+                for each_p in p:
+                    returns.append(ParticleRunner.run_get_all_info(
+                        p=each_p,m=m,length=length,footstep=footstep
+                    ))
+                return returns
+            else:
+                return BaseUtils.submit_process_task(
+                    task=ParticleRunner.run_get_all_info,
+                    param_list=[
+                        [this_p,m,length,footstep] for this_p in p
+                    ],
+                    concurrency_level=concurrency_level,
+                    report=report
+                )
+
+
 
     @staticmethod
     def run_only_deprecated(
