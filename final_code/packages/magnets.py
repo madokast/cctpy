@@ -417,6 +417,7 @@ class QS(Magnet, ApertureObject):
             second_gradient: float,
             aperture_radius: float,
     ):
+        # print(aperture_radius)
         self.local_coordinate_system = local_coordinate_system
         self.length = float(length)
         self.gradient = float(gradient)

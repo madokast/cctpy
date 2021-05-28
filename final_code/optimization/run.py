@@ -1,11 +1,7 @@
-# from visdom import Visdom
-
 from cctpy import *
 from hust_sc_gantry import HUST_SC_GANTRY
 import time
 import numpy as np
-
-VIZ_PORT = 8098
 
 ga32 = GPU_ACCELERATOR()
 
@@ -209,82 +205,3 @@ def create_beamline(param, second_bending_part_start_point, second_bending_part_
         dicct345_inner_small_r=124.5 * MM,  # 83+30+1
         dicct345_outer_small_r=140.5 * MM,  # 83+45 +2
     ).create_second_bending_part_beamline()
-
-
-wins = []  # 画图窗口
-
-
-def draw_viz(params_and_objs):
-    viz = Visdom(server='Http://127.0.0.1', port=VIZ_PORT)
-    assert viz.check_connection()
-
-    data = np.array(params_and_objs)
-
-    x = np.array(list(range(data.shape[0])))
-
-    xd = np.concatenate((x.reshape((-1, 1)), data), axis=1)
-
-    # xd 每一列的意义
-    # 0 编号 0-34265
-    # 12 qs参数
-    # 345 / 678 CCT倾斜角参数
-    # 9 10 电流
-    # 11 12 13 匝数
-    # 14 15 16 17 18
-    # 19 20 21 22 23 束斑和均值差
-    # 24 束斑均值
-
-    lables = ['qs-q', 'qs-s',
-              'dicct-t4', 'dicct-t6', 'dicct-t8',
-              'agcct-t2', 'agcct-t6', 'agcct-t8',
-              'dicct-I', 'agcct-I',
-              'agcct-wn0', 'agcct-wn1', 'agcct-wn2',
-              'diff_size1', 'diff_size2', 'diff_size3', 'diff_size4', 'diff_size5',
-              'diff_size6', 'diff_size7', 'diff_size8', 'diff_size9', 'diff_size0',
-              'beam_avg', 'max_diff_size']
-
-    for i in range(len(lables)):
-        if len(wins) != len(lables):
-            if i == len(lables) - 1:  # last
-                wins.append(viz.scatter(
-                    X=np.vstack((xd[:, 0], np.max(xd[:, 14:24], axis=1))).T,
-                    opts={
-                        'title': lables[i] + ' vs individual',
-                        'xlabel': 'individual',
-                        'ylabel': lables[i],
-                        'markersize': 2
-                    }
-                ))
-            else:
-                wins.append(viz.scatter(
-                    X=np.vstack((xd[:, 0], xd[:, i + 1])).T,
-                    opts={
-                        'title': lables[i] + ' vs individual',
-                        'xlabel': 'individual',
-                        'ylabel': lables[i],
-                        'markersize': 2
-                    }
-                ))
-        else:
-            if i == len(lables) - 1:  # last
-                wins[i] = viz.scatter(
-                    X=np.vstack((xd[:, 0], np.max(xd[:, 14:24], axis=1))).T,
-                    win=wins[i],
-                    opts={
-                        'title': lables[i] + ' vs individual',
-                        'xlabel': 'individual',
-                        'ylabel': lables[i],
-                        'markersize': 2
-                    }
-                )
-            else:
-                viz.scatter(
-                    X=np.vstack((xd[:, 0], xd[:, i + 1])).T,
-                    win=wins[i],
-                    opts={
-                        'title': lables[i] + ' vs individual',
-                        'xlabel': 'individual',
-                        'ylabel': lables[i],
-                        'markersize': 2
-                    }
-                )

@@ -134,6 +134,12 @@ class Line2:
         """
         return self.point_at(self.get_length())
 
+    def point_at_middle(self) -> P2:
+        """
+        获得曲线 line 中点位置
+        """
+        return self.point_at(self.get_length()/2)
+
     def direct_at_start(self) -> P2:
         """
         获得曲线 line 起点方向
@@ -145,6 +151,12 @@ class Line2:
         获得曲线 line 终点方向
         """
         return self.direct_at(self.get_length())
+
+    def direct_at_middle(self) -> P2:
+        """
+        获得曲线 line 中点方向
+        """
+        return self.direct_at(self.get_length()/2)
 
     # ------------------------------平移-------------------- #
     def __add__(self, v2: P2) -> "Line2":
@@ -186,7 +198,8 @@ class Line2:
         -------
 
         """
-        number: int = int(math.ceil(self.get_length() / step)) + 1 # 这里要加 1，调整于 2021年4月28日
+        number: int = int(math.ceil(self.get_length() / step)
+                          ) + 1  # 这里要加 1，调整于 2021年4月28日
         return [
             self.point_at(s) for s in BaseUtils.linspace(0, self.get_length(), number)
         ]
@@ -198,7 +211,8 @@ class Line2:
         同方法 disperse2d
         每个离散点带有距离，返回值是 ValueWithDistance[P2] 的数组
         """
-        number: int = int(math.ceil(self.get_length() / step)) + 1 # 这里要加 1，调整于 2021年4月28日
+        number: int = int(math.ceil(self.get_length() / step)
+                          ) + 1  # 这里要加 1，调整于 2021年4月28日
         return [
             ValueWithDistance(self.point_at(s), s)
             for s in BaseUtils.linspace(0, self.get_length(), number)
@@ -549,3 +563,12 @@ class ArcLine2(Line2):
     def __repr__(self) -> str:
         return self.__str__()
 
+    @staticmethod
+    def as_arc_line2(anything) -> "ArcLine2":
+        """
+        仿佛是类型转换
+        实际啥也没做
+        但是 IDE 就能根据返回值做代码提示了
+        since v0.1.3
+        """
+        return anything

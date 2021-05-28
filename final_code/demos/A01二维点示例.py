@@ -20,7 +20,7 @@ from cctpy import *
 point23 = P2(2, 3)
 point23 = P2(x=2, y=3)
 print("点point23 =", point23)
-# xxx
+# 点point23 = (2.0, 3.0)
 
 # length()，获得二维向量的长度，以 (3,4) 为例
 point34 = P2(x=3, y=4)

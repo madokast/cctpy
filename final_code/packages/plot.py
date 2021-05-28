@@ -218,6 +218,22 @@ class Plot3:
                            axis_lengths[2]], describe=describe)
 
     @staticmethod
+    def plot_running_particle(p:RunningParticle, describe="r.")->None:
+        """
+        绘制单个粒子，实际上绘制粒子的位置
+        """
+        Plot3.plot_p3(p.position,describe=describe)
+
+
+    @staticmethod
+    def plot_running_particles(ps:List[RunningParticle], describe="r.")->None:
+        """
+        绘制多个粒子，实际上绘制粒子的位置
+        """
+        Plot3.plot_p3s([p.position for p in ps],describe=describe)    
+
+
+    @staticmethod
     def set_center(center: P3 = P3.origin(), cube_size: float = 1.0) -> None:
         """
         设置视界中心和范围

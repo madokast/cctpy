@@ -132,3 +132,4 @@ dmypy.json
 .idea/
 /code/c/cct_for_cuda/.vs/
 /code/c/cct_for_cuda/x64/
+final_code/record

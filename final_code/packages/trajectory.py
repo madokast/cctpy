@@ -23,6 +23,7 @@ from packages.base_utils import BaseUtils
 from packages.local_coordinate_system import LocalCoordinateSystem
 from packages.lines import *
 
+
 class Trajectory(Line2):
     """
     二维设计轨迹，由直线+圆弧组成
@@ -160,8 +161,8 @@ class Trajectory(Line2):
 
     def __str__(self) -> str:
 
-        details = ["# {:0>2d} ".format(i+1)+self.__trajectoryList[i].__str__() 
-            for i in range(len(self.__trajectoryList))]
+        details = ["# {:0>2d} ".format(i+1)+self.__trajectoryList[i].__str__()
+                   for i in range(len(self.__trajectoryList))]
         details = "\t\n".join(details)
         return f"Trajectory:\t\n{details}"
 
@@ -198,6 +199,12 @@ class Trajectory(Line2):
         since 0.1.1
         """
         return self.__trajectoryList
+
+    def get_last_line2(self) -> Line2:
+        """
+        获取 Trajectory 中 line2 数组中最后一个
+        """
+        return self.get_line2_list()[-1]
 
     def as_aperture_objrct_on_last(self, aperture_radius: float) -> "Trajectory":
         """
