@@ -1,12 +1,20 @@
-from cctpy import *
-from hust_sc_gantry import *
-from optimization.run_first_bending_part import create_beamline
+"""
+2021年5月21日 
 
-param = [5.498,	-3.124, 	30.539, 	0.383,
-         84.148, 	94.725,	82.377,
-         100.672,	72.283 	, 99.973,
-         -9807.602,	9999.989 	, 25.000,	24.000
-         ]
+重新调整束线
+前段一个 QS
+后段漂移段 2.5 米
+
+优化识别码 202105210001
+"""
+
+# 因为要使用父目录的 cctpy 所以加入
+from os import error, path
+import sys
+sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
+from cctpy import *
+from work.A03run import *
+from work.A03geatpy_problem import *
 
 
 def beamline_phase_ellipse_multi_delta(bl: Beamline, particle_number: int,
@@ -51,11 +59,15 @@ def beamline_phase_ellipse_multi_delta(bl: Beamline, particle_number: int,
     plt.show()
 
 
+
 if __name__ == '__main__':
     BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
-    bl = create_beamline(param)
-    print(bl.point_at_end())
+
+    params = [2.4450,4.4494,-15.6344,]
+
+    bl = create_gantry_beamline(params)
 
     beamline_phase_ellipse_multi_delta(
-        bl,5,[-0.05,0,0.05]
+        bl,8,[0.0]
     )
+

@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     for i in range(len(ms)):
         straight_dipole_magnet_filed = ms[i]
-        bl = Beamline = (
+        bl = (
                 Beamline.set_start_point(P2.origin())  # 设置束线的起点
                 # 设置束线中第一个漂移段（束线必须以漂移段开始）
                 .first_drift(direct=P2.x_direct(), length=DL1)
@@ -264,10 +264,10 @@ if __name__ == "__main__":
             footstep=20*MM
         )
 
-        Plot2.plot_p2s(xs,describe=cs[i],circle=True)
+        Plot2.plot_p2s(ys,describe=cs[i],circle=True)
     
     Plot2.equal()
     Plot2.legend(*[str(s)+"T" for s in ms])
-    Plot2.info("x/mm","xp/mr","dp="+str(int(delta*100))+"%")
+    Plot2.info("y/mm","yp/mr","dp="+str(int(delta*100))+"%")
     Plot2.show()
 

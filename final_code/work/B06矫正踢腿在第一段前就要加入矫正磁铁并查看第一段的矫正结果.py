@@ -64,25 +64,25 @@ if __name__ == "__main__":
              -9807.602,	9999.989 	, 25.000,	24.000
              ]
 
-    qs1_g = param[0]
-    qs2_g = param[1]
+    qs1_g = param[0] # 5.498
+    qs2_g = param[1] # -3.124
 
-    qs1_s = param[2]
-    qs2_s = param[3]
+    qs1_s = param[2] # 30.539
+    qs2_s = param[3] # 0.383
 
-    dicct_tilt_1 = param[4]
-    dicct_tilt_2 = param[5]
-    dicct_tilt_3 = param[6]
+    dicct_tilt_1 = param[4] # 84.148
+    dicct_tilt_2 = param[5] # 94.725
+    dicct_tilt_3 = param[6] # 82.377
 
-    agcct_tilt_0 = param[7]
-    agcct_tilt_2 = param[8]
-    agcct_tilt_3 = param[9]
+    agcct_tilt_0 = param[7] # 100.672
+    agcct_tilt_2 = param[8] # 72.283
+    agcct_tilt_3 = param[9] # 99.973
 
-    dicct_current = param[10]
-    agcct_current = param[11]
+    dicct_current = param[10] # -9807.602
+    agcct_current = param[11] # 9999.989
 
-    agcct1_wn = int(param[12])
-    agcct2_wn = int(param[13])
+    agcct1_wn = int(param[12]) # 25
+    agcct2_wn = int(param[13]) # 24
 
 
     qs1_gradient=qs1_g
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     for i in range(len(ms)):
         straight_dipole_magnet_filed = ms[i]
-        bl = Beamline = (
+        bl = (
                 Beamline.set_start_point(P2.origin())  # 设置束线的起点
                 # 设置束线中第一个漂移段（束线必须以漂移段开始）
                 .first_drift(direct=P2.x_direct(), length=DL1)
