@@ -17,14 +17,17 @@ from cctpy import *
 
 # 例如距离 0 上存在一句话 "hello"
 hello_at_0 = ValueWithDistance(value="hello",distance=0)
-print("hello_at_0",hello_at_0) # (0:hello)
+print("hello_at_0",hello_at_0)
+# (0:hello)
 
 # 例如距离 1 上存在一个二维点 (2,3)
 point23_at_1 = ValueWithDistance(value=P2(2,3),distance=1)
-print("point23_at_1",point23_at_1) # (1:(2.0, 3.0))
+print("point23_at_1",point23_at_1)
+# (1:(2.0, 3.0))
 
 # 例如距离 2.5 上存在一个三维零矢量 (0,0,0)
 zero3_at_2d5 = ValueWithDistance(value=P3.zeros(),distance=2.5)
-print("zero3_at_2d5",zero3_at_2d5) # (2.5:(0.0, 0.0, 0.0))
+print("zero3_at_2d5",zero3_at_2d5)
+# (2.5:(0.0, 0.0, 0.0))
 
 # 这个类对象常出现在数组中，用来显示一条路径上的磁场分布

@@ -69,41 +69,48 @@ print("straight_line.direct_at(0.5) 为",straight_line.direct_at(0.5)) # (1.0, 0
 print("arc_line.direct_at(math.pi/2) 为",arc_line.direct_at(math.pi/2)) # (-1.0, 1.2246467991473532e-16)
 
 # 函数 right_hand_side_point(s,d) 和  left_hand_side_point(s,d) 用来计算曲线 s 位置处，右手侧/左手侧 d 位置处点坐标
-# 可以用人沿着曲线运动来直观的理解，假设人沿着曲线正方向运动，先运动 s 距离，然后他右手侧/左手侧 d 位置处的点，即函数的返回值
-# straight_line 起点位置，右手侧 1 米位置的点为（很明显是 (0,-1)）
-print("straight_line 起点位置，右手侧 1 米位置的点为",straight_line.right_hand_side_point(0,1)) # (6.123233995736766e-17, -1.0)
-# arc_line 终点位置，左手侧 1 米位置的点为（很明显是原点）
-print("arc_line 终点位置，左手侧 1 米位置的点为",arc_line.left_hand_side_point(arc_line.get_length(),1)) # (0.0, 2.465190328815662e-32)
+# 这两个函数可以用人沿着曲线运动来直观的理解，假设人沿着曲线正方向运动，先运动 s 距离，然后他右手侧/左手侧 d 位置处的点，即函数的返回值
+# 对于 straight_line 来说，起点位置，右手侧 1 米位置的点为（很明显是 (0,-1)）
+print("straight_line 起点位置，右手侧 1 米位置的点为",straight_line.right_hand_side_point(0,1))
+# (6.123233995736766e-17, -1.0)
+# 对于 arc_line 来说，终点位置，左手侧 1 米位置的点为（很明显是原点）
+print("arc_line 终点位置，左手侧 1 米位置的点为",arc_line.left_hand_side_point(arc_line.get_length(),1))
+# (0.0, 2.465190328815662e-32)
 
-# 函数 point_at_start() 和 point_at_end() 返回曲线起点和终点坐标
+# 函数 point_at_start()、point_at_middle() 和 point_at_end() 返回曲线起点、中点和终点坐标
 print("straight_line 的起点为",straight_line.point_at_start()) # (0.0, 0.0)
+print("straight_line 的中点为",straight_line.point_at_middle()) # (0.5, 0.0)
 print("straight_line 的终点为",straight_line.point_at_end()) # (1.0, 0.0)
 
-# 函数 direct_at_start() 和 direct_at_end() 返回曲线起点和终点处的切向
+# 函数 direct_at_start()、direct_at_middle() 和 direct_at_end() 返回曲线起点、中点和终点处的切向
 print("arc_line 的起点处的切向为",arc_line.direct_at_start()) # (6.123233995736766e-17, 1.0)
+print("arc_line 的中点处的切向为",arc_line.direct_at_middle()) # (-1.0, 1.2246467991473532e-16)
 print("arc_line 的终点处的切向为",arc_line.direct_at_end()) # (-1.8369701987210297e-16, -1.0)
 
 # 函数 __add__()，可以实现曲线的平移，使用 + 运算符，配合二维矢量实现
 # 将 straight_line 向上平移 0.5 米
 straight_line_up05 = straight_line+P2(y=0.5)
-print("straight_line 向上平移 0.5 米，起点为",straight_line_up05.point_at_start()) # (0.0, 0.5)
+print("straight_line 向上平移 0.5 米，起点为",straight_line_up05.point_at_start())
+# (0.0, 0.5)
 
 # disperse2d(step) 将二维曲线离散成连续的二维点，step 为离散点步长，默认 1 毫米。返回值为二维点的数组。
 # straight_line 按照 step=0.2 米离散
 # 返回 [(0.0, 0.0), (0.2, 0.0), (0.4, 0.0), (0.6000000000000001, 0.0), (0.8, 0.0), (1.0, 0.0)]
 print("straight_line 按照 step=0.2 米离散",straight_line.disperse2d(0.2))
 # arc_line 按照默认 step 离散，查看离散后点数组的长度，和前 2 项
-print("arc_line 按照默认 step 离散，查看离散后点数组的长度",len(arc_line.disperse2d())) # 3143
-print("arc_line 按照默认 step 离散，查看前 2 项",arc_line.disperse2d()[:2]) # [(1.0, 0.0), (0.9999995001296789, 0.0009998701878188414)]
+print("arc_line 按照默认 step 离散，查看离散后点数组的长度",len(arc_line.disperse2d()))
+# 3143
+print("arc_line 按照默认 step 离散，查看前 2 项",arc_line.disperse2d()[:2])
+# [(1.0, 0.0), (0.9999995001296789, 0.0009998701878188414)]
 
 # disperse2d_with_distance() 将二维曲线离散成连续的二维点，其中二维点带有其所在位置（距离）
 # 带有位置/距离，是为了方便磁场计算时。得到磁场某分量按照位置/距离的分布
 # straight_line 按照 step=0.5 米离散
-# 返回 [(0.0:(0.0, 0.0)), (0.25:(0.25, 0.0)), (0.5:(0.5, 0.0)), (0.75:(0.75, 0.0)), (1.0:(1.0, 0.0))]
 print("straight_line 按照 step=0.2 米离散",straight_line.disperse2d_with_distance(0.25))
+# 返回 [(0.0:(0.0, 0.0)), (0.25:(0.25, 0.0)), (0.5:(0.5, 0.0)), (0.75:(0.75, 0.0)), (1.0:(1.0, 0.0))]
 
 # disperse3d() 和 disperse3d_with_distance()和上面两个方法类似，返回的点为三维点
-# 因此可以传入二维到三维的转换的 lambda 函数，p2_t0_p3
+# 因此可以传入二维到三维的转换的 lambda 函数，p2_t0_p3，控制二维点到三维点的转换方式
 # arc_line 按照默认 step 离散，p2_t0_p3 将转换的点 z 方向平移 0.7 米，查看前 2 项
 print(
     "arc_line 按照默认 step 离散，p2_t0_p3 将转换的点 z 方向平移 0.7 米，查看前 2 项",
@@ -111,10 +118,14 @@ print(
 )# [(0.0:(1.0, 0.0, 0.7)), (0.0009998703544206852:(0.9999995001296789, 0.0009998701878188414, 0.7))]
 
 # 函数 __str__()，将二维曲线转为字符串，在 print() 时自动调用
-print(straight_line) # 直线段，起点(0.0, 0.0)，方向(1.0, 0.0)，长度1.0
-print(straight_line.__str__()) # 直线段，起点(0.0, 0.0)，方向(1.0, 0.0)，长度1.0
-print(arc_line) # 弧线段，起点(1.0, 0.0)，方向(6.123233995736766e-17, 1.0)，顺时针False，半径1.0，角度3.141592653589793
-print(arc_line.__str__()) # 弧线段，起点(1.0, 0.0)，方向(6.123233995736766e-17, 1.0)，顺时针False，半径1.0，角度3.141592653589793
+print(straight_line)
+# 直线段，起点(0.0, 0.0)，方向(1.0, 0.0)，长度1.0
+print(straight_line.__str__())
+# 直线段，起点(0.0, 0.0)，方向(1.0, 0.0)，长度1.0
+print(arc_line)
+# 弧线段，起点(1.0, 0.0)，方向(6.123233995736766e-17, 1.0)，顺时针False，半径1.0，角度3.141592653589793
+print(arc_line.__str__())
+# 弧线段，起点(1.0, 0.0)，方向(6.123233995736766e-17, 1.0)，顺时针False，半径1.0，角度3.141592653589793
 
 
 
@@ -153,7 +164,8 @@ print("点 (-10, -1) 在straight_line的右侧，所以 position_of 返回",stra
 # 函数 straight_line_equation() 返回这条直线段所在直线的方程
 # 方程形式为 Ax + By + C = 0，返回 (A,B,C) 形式的元组
 # 注意结果不唯一，不能用于比较
-print("straight_line 所在直线方程系数为：",straight_line.straight_line_equation()) # (0.0, 1.0, -0.0)
+print("straight_line 所在直线方程系数为：",straight_line.straight_line_equation())
+# (0.0, 1.0, -0.0)
 
 
 # 类函数 intersecting_point(pa,va,pb,vb) 求两条直线 a 和 b 的交点
@@ -250,13 +262,14 @@ arc90 = ArcLine2.create(
 # plt.axis("equal") # 让 x 轴和 y 轴坐标比例相同
 # plt.show()
 
-# 类函数 unit_circl(phi) 获取极坐标(r=1.0,phi=phi)的点的直角坐标(x,y)
+# 类函数 unit_circle(phi) 获取极坐标(r=1.0,phi=phi)的点的直角坐标(x,y)
 # 例如 45 度
-print("unit_circl(45) =",ArcLine2.unit_circle(45*DEG)) # (0.7071067811865476, 0.7071067811865476)
+print("unit_circle(45) =",ArcLine2.unit_circle(45*DEG))
+# (0.7071067811865476, 0.7071067811865476)
 
 # 函数 __str__() 和 __repr__() 将圆弧转为字符串，在调用 print() 时自动执行
 # 下面三条语句均打印：
-# 弧线段[起点(0.0, 100.0)，方向(6.123233995736766e-17, 1.0)，顺时针，半径10，角度1.5707963267948966]
 print(arc90)
 print(arc90.__str__())
 print(arc90.__repr__())
+# 弧线段[起点(0.0, 100.0)，方向(6.123233995736766e-17, 1.0)，顺时针，半径10，角度1.5707963267948966]

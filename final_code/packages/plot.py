@@ -407,7 +407,7 @@ class Plot2:
             print(f"无法绘制{data}")
 
     @staticmethod
-    def plot_xy(x: float, y: float, describe="r") -> None:
+    def plot_xy(x: float, y: float, describe="r.") -> None:
         """
         绘制点 (x,y)
         绘制图象时只有 plot_xy 和 plot_xy_array 访问底层，所以需要判断是否初始化

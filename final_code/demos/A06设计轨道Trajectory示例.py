@@ -67,7 +67,8 @@ print(traj) # 01 直线段[起点(1.0, 1.0)，方向(1.0, 0.0)，长度10.0]
 straight_line = (Trajectory
     .set_start_point(P2.origin())
     .first_line(direct=P2.x_direct(),length=1))
-print(straight_line) # # 01 直线段[起点(0.0, 0.0)，方向(1.0, 0.0)，长度1.0]
+print(straight_line)
+# 01 直线段[起点(0.0, 0.0)，方向(1.0, 0.0)，长度1.0]
 
 # 函数 get_line2_list() 用于获得 trajectory 内部的曲线数组
 # 即 add_xxx() 函数都是在 trajectory 内添加数组
@@ -106,17 +107,22 @@ square_aper = (Trajectory
 )
 # 去除注释显示绘图效果
 # plt.plot(*P2.extract(square_aper.disperse2d()))
-# for aperture_objrct in square_aper.get_aperture_objrcts(): # get_aperture_objrcts 获取内部的孔径信息
+# get_aperture_objrcts 获取内部的孔径信息
+# for aperture_objrct in square_aper.get_aperture_objrcts(): 
 #     plt.plot(*P2.extract(aperture_objrct.disperse2d()))
 # plt.axis("equal")
 # plt.show()
 
 # 函数 get_aperture_objrcts() 获取内部的孔径信息，即 lines 数组
 first_aperture_objrct = square_aper.get_aperture_objrcts()[0]
-print("函数 get_aperture_objrcts() 获取内部的孔径信息",type(first_aperture_objrct)) # <class 'packages.lines.ArcLine2'>
+print("函数 get_aperture_objrcts() 获取内部的孔径信息",type(first_aperture_objrct)) 
+# <class 'packages.lines.ArcLine2'>
 
 # 函数 __str__() 和 __repr__()，将对象转为字符串
-# 以下均打印打印
+# 以下均打印
+print(square)
+print(square.__str__())
+print(square.__repr__())
 # Trajectory:
 # 01 直线段[起点(0.0, 0.0)，方向(1.0, 0.0)，长度10.0]
 # 02 弧线段[起点(10.0, 0.0)，方向(1.0, 0.0)，顺时针，半径1，角度1.5707963267948966]
@@ -126,9 +132,7 @@ print("函数 get_aperture_objrcts() 获取内部的孔径信息",type(first_ape
 # 06 弧线段[起点(-3.6739403974420594e-16, -12.000000000000002)，方向(-1.0, 1.224646799147353e-16)，顺时针，半径1，角度1.5707963267948966]
 # 07 直线段[起点(-1.0000000000000002, -11.000000000000002)，方向(6.123233995736766e-17, 1.0)，长度10.0]
 # 08 弧线段[起点(-0.9999999999999996, -1.0000000000000016)，方向(6.123233995736766e-17, 1.0)，顺时针，半径1，角度1.5707963267948966]
-print(square)
-print(square.__str__())
-print(square.__repr__())
+
 
 
 # 函数 __cctpy__() 时彩蛋，打印 CCTPY 五个字母
