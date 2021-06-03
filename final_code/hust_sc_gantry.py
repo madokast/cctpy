@@ -378,6 +378,49 @@ class HUST_SC_GANTRY:
         
         return self.__total_beamline
 
+
+def beamline_phase_ellipse_multi_delta(bl: Beamline, particle_number: int,
+                                       dps: List[float], describles: str = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-'],
+                                       foot_step: float = 20*MM, report: bool = True):
+    if len(dps) > len(describles):
+        print(
+            f'describles(size={len(describles)}) 长度应大于等于 dps(size={len(dps)})')
+    xs = []
+    ys = []
+    for dp in dps:
+        x, y = bl.track_phase_ellipse(
+            x_sigma_mm=3.5, xp_sigma_mrad=7.5,
+            y_sigma_mm=3.5, yp_sigma_mrad=7.5,
+            delta=dp, particle_number=particle_number,
+            kinetic_MeV=215, concurrency_level=16,
+            footstep=foot_step,
+            report=report
+        )
+        xs.append(x + [x[0]])
+        ys.append(y + [y[0]])
+
+    plt.subplot(121)
+
+    for i in range(len(dps)):
+        plt.plot(*P2.extract(xs[i]), describles[i])
+    plt.xlabel(xlabel='x/mm')
+    plt.ylabel(ylabel='xp/mr')
+    plt.title(label='x-plane')
+    plt.legend(['dp'+str(int(dp*100)) for dp in dps])
+    plt.axis("equal")
+
+    plt.subplot(122)
+    for i in range(len(dps)):
+        plt.plot(*P2.extract(ys[i]), describles[i])
+    plt.xlabel(xlabel='y/mm')
+    plt.ylabel(ylabel='yp/mr')
+    plt.title(label='y-plane')
+    plt.legend(['dp'+str(int(dp*100)) for dp in dps])
+    plt.axis("equal")
+
+    plt.show()
+
+
 if __name__ == "__main__":
     g = HUST_SC_GANTRY()
     f = g.create_first_bending_part_beamline()

@@ -1,0 +1,6 @@
+First corner
+-0.2    -0.05    -0.2
+Step between points
+0.02    0.01     0.01
+Number of points
+21      11       41

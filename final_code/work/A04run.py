@@ -235,6 +235,7 @@ def run(params: np.ndarray):
     # 统计器
     statistic_x = BaseUtils.Statistic()
     statistic_y = BaseUtils.Statistic()
+    statistic_x_all = BaseUtils.Statistic()
     statistic_beam_sizes = BaseUtils.Statistic()
 
     # 所有机架 所有目标
@@ -263,9 +264,12 @@ def run(params: np.ndarray):
                 # 统计 x 和 y
                 statistic_x.add(pp.x / MM)
                 statistic_y.add(pp.y / MM)  # mm
+            statistic_x_all.add_all(statistic_x.data())
+            
             # 分别求束斑
             beam_size_x = (statistic_x.max() - statistic_x.min()) / 2
             beam_size_y = (statistic_y.max() - statistic_y.min()) / 2
+            
 
             statistic_x.clear()
             statistic_y.clear()
@@ -277,9 +281,11 @@ def run(params: np.ndarray):
 
             obj.append(beam_size)  # 用于记录每次束斑
 
+        center = statistic_x_all.average()
+
         # 均值
         beam_size_avg = statistic_beam_sizes.average()
-        objs.append([abs(bs - beam_size_avg) for bs in obj] + [beam_size_avg])
+        objs.append([abs(bs - beam_size_avg) for bs in obj] + [beam_size_avg]+[abs(center)])
         statistic_beam_sizes.clear()
 
     objs_np = np.array(objs)
@@ -289,7 +295,11 @@ def run(params: np.ndarray):
         obj = objs_np[gid]
         params_and_objs.append(np.concatenate((param, obj)))
 
-    np.savetxt(fname='./record/' + str(times) + '.txt', X=params_and_objs)
+    # 删除之前的文件
+    path = "./record/A04run.txt"
+    if os.path.exists(path):
+        os.remove(path)
+    np.savetxt(fname=path, X=params_and_objs)
 
     times += 1
 

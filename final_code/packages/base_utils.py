@@ -18,7 +18,8 @@ import numpy
 from scipy.integrate import solve_ivp  # since v0.1.1 ODE45
 import warnings  # since v0.1.1 提醒方法过时
 from packages.constants import *
-from packages.point import P2,P3
+from packages.point import P2, P3
+
 
 class BaseUtils:
     """
@@ -511,6 +512,12 @@ class BaseUtils:
 
         def __init__(self):
             self.__data: List[float] = []
+
+        def data(self) -> List[float]:
+            """
+            获取全部数据
+            """
+            return self.__data
 
         def add(self, val: float) -> 'BaseUtils.Statistic':
             """
