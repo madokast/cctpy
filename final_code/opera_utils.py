@@ -1,6 +1,9 @@
 """
 CCT 建模优化代码
-OPERA 软件扩展
+OPERA 扩展，主要包括两个功能：
+1. CCT线圈生成导体 cond 文件，可以导入 OPERA
+    使用 OperaConductor.create_by_cct(cct,槽宽,槽深,标签,每周分段数目) 
+2. OPERA 磁铁导入
 
 作者：赵润晓
 日期：2021年6月3日
@@ -302,7 +305,7 @@ class OperaFieldTableMagnet(Magnet):
         step_between_points_x / y / z 即 opera 导出磁场时 Step between points 填写的值。单位由 unit_of_length 指定
         number_of_points_x / y / z 即 opera 导出磁场时 Number of points 填写的值
         unit_of_length 是数据中长度单位，默认米。（注意 opera 中默认毫米，如果 opera 未修改单位，需要设为毫米 MM）
-        unit_of_field 是磁场单位，默认特斯拉 T，即 1 T。
+        unit_of_field 是磁场单位，默认特斯拉 T，即 1 T。如果是高斯，则输入 1e-4
 
         磁场文件格式：
 
@@ -317,6 +320,9 @@ class OperaFieldTableMagnet(Magnet):
         -0.550000000000      -1.10000000000     -0.100000000000E-01  0.500216216871E-04  0.431668985488E-05 -0.180396818407E-02
         -0.550000000000      -1.10000000000     -0.500000000000E-02  0.422312886145E-04 -0.426162472137E-05 -0.180415005970E-02
         ... ...
+
+        成员变量： xyz_0 gap_xyz number_of_points_xyz total_point_number
+            table_position_data_xyz table_field_data_xyz
         """
 
         # 顶点

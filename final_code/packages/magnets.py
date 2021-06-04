@@ -424,21 +424,27 @@ class CombinedMagnet(Magnet):
         输入磁场 magnetic_field
         """
         super().__init__()
-        self.magnets: Tuple[Magnet] = []
-        for m in magnets:
-            if isinstance(m, Magnet):
-                self.magnets.append(m)
-            elif isinstance(m, Sequence):
-                self.magnets.append(CombinedMagnet(*m))
-            else:
-                raise ValueError(f"无法构建 CombinedMagnet，{m}未知")
+        self.__magnets: List[Magnet] = list(magnets)
+
+    def add(self,magnet:Magnet)->"CombinedMagnet":
+        """
+        添加一个磁铁
+        """
+        self.__magnets.append(magnet)
+        return self
+
+    def get_magnets(self)->List[Magnet]:
+        """
+        暴露内部磁铁数组
+        """
+        return self.__magnets
 
     def magnetic_field_at(self, point: P3) -> P3:
         """
         任意点均产生相同磁场
         """
         B = P3.zeros()
-        for m in self.magnets:
+        for m in self.__magnets:
             B += m.magnetic_field_at(point)
         return B
 

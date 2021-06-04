@@ -538,6 +538,12 @@ class BaseUtils:
             最大值
             """
             return numpy.max(self.__data)
+        
+        def absolute_max(self)->float:
+            """
+            
+            """
+            return numpy.max(numpy.abs(self.__data))
 
         def min(self) -> float:
             """

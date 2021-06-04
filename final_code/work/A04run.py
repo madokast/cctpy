@@ -234,9 +234,9 @@ def run(params: np.ndarray):
 
     # 统计器
     statistic_x = BaseUtils.Statistic()
+    statistic_xp = BaseUtils.Statistic()
     statistic_y = BaseUtils.Statistic()
-    statistic_x_all = BaseUtils.Statistic()
-    statistic_beam_sizes = BaseUtils.Statistic()
+    statistic_yp = BaseUtils.Statistic()
 
     # 所有机架 所有目标
     objs: List[List[float]] = []
@@ -264,29 +264,36 @@ def run(params: np.ndarray):
                 # 统计 x 和 y
                 statistic_x.add(pp.x / MM)
                 statistic_y.add(pp.y / MM)  # mm
-            statistic_x_all.add_all(statistic_x.data())
-            
-            # 分别求束斑
-            beam_size_x = (statistic_x.max() - statistic_x.min()) / 2
-            beam_size_y = (statistic_y.max() - statistic_y.min()) / 2
-            
 
-            statistic_x.clear()
-            statistic_y.clear()
+                statistic_xp.add(pp.xp / MRAD)
+                statistic_yp.add(pp.yp / MRAD)
+        
+        width_max_x = statistic_x.absolute_max()
+        width_max_xp = statistic_xp.absolute_max()
+        width_max_y = statistic_y.absolute_max()
+        width_max_yp = statistic_yp.absolute_max()
 
-            # 只有 x 和 y 中大的我需要
-            beam_size = max(beam_size_x, beam_size_y)
+        center_x = abs(statistic_x.average())
+        center_xp = abs(statistic_xp.average())
+        center_y = abs(statistic_y.average())
+        center_yp = abs(statistic_yp.average())
 
-            statistic_beam_sizes.add(beam_size)  # 用于统计均值
+        diff_xy = abs(width_max_x-width_max_y)
 
-            obj.append(beam_size)  # 用于记录每次束斑
 
-        center = statistic_x_all.average()
+        objs.append([
+            width_max_x,
+            width_max_xp,
+            width_max_y,
+            width_max_yp,
 
-        # 均值
-        beam_size_avg = statistic_beam_sizes.average()
-        objs.append([abs(bs - beam_size_avg) for bs in obj] + [beam_size_avg]+[abs(center)])
-        statistic_beam_sizes.clear()
+            center_x,
+            center_xp,
+            center_y,
+            center_yp,
+
+            diff_xy
+        ])
 
     objs_np = np.array(objs)
 
