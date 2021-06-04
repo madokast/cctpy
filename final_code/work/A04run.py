@@ -234,9 +234,15 @@ def run(params: np.ndarray):
 
     # 统计器
     statistic_x = BaseUtils.Statistic()
-    statistic_xp = BaseUtils.Statistic()
     statistic_y = BaseUtils.Statistic()
+    statistic_xp = BaseUtils.Statistic()
     statistic_yp = BaseUtils.Statistic()
+
+    statistic_x_per_dp = BaseUtils.Statistic()
+    statistic_y_per_dp = BaseUtils.Statistic()
+
+    statistic_width_x_per_dp = BaseUtils.Statistic()
+    statistic_width_y_per_dp = BaseUtils.Statistic()
 
     # 所有机架 所有目标
     objs: List[List[float]] = []
@@ -267,18 +273,34 @@ def run(params: np.ndarray):
 
                 statistic_xp.add(pp.xp / MRAD)
                 statistic_yp.add(pp.yp / MRAD)
+
+                statistic_x_per_dp.add(pp.x / MM)
+                statistic_y_per_dp.add(pp.y / MM)
+            
+            # 每个动量分散的束斑大小
+            statistic_width_x_per_dp.add(statistic_x_per_dp.helf_width())
+            statistic_width_y_per_dp.add(statistic_y_per_dp.helf_width())
+            statistic_x_per_dp.clear()
+            statistic_y_per_dp.clear()
         
+        # 总宽度
         width_max_x = statistic_x.absolute_max()
         width_max_xp = statistic_xp.absolute_max()
         width_max_y = statistic_y.absolute_max()
         width_max_yp = statistic_yp.absolute_max()
 
+        # 总中心
         center_x = abs(statistic_x.average())
         center_xp = abs(statistic_xp.average())
         center_y = abs(statistic_y.average())
         center_yp = abs(statistic_yp.average())
 
+        # 总 xy 宽度对比
         diff_xy = abs(width_max_x-width_max_y)
+
+        # 波动
+        fluct_x = statistic_width_x_per_dp.width()
+        fluct_y = statistic_width_y_per_dp.width()
 
 
         objs.append([
@@ -292,8 +314,20 @@ def run(params: np.ndarray):
             center_y,
             center_yp,
 
-            diff_xy
+            diff_xy,
+
+            fluct_x,
+            fluct_y
         ])
+
+        # clear
+        statistic_x.clear()
+        statistic_y.clear()
+        statistic_xp.clear()
+        statistic_yp.clear()
+        statistic_width_x_per_dp.clear()
+        statistic_width_y_per_dp.clear()
+
 
     objs_np = np.array(objs)
 

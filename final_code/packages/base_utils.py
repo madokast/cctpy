@@ -563,13 +563,22 @@ class BaseUtils:
             """
             return sum(self.__data) / len(self.__data)
 
+
+        def width(self) -> float:
+            """
+            宽度
+            即 (max-min)
+            这个方法用于求束斑大小
+            """
+            return (self.max()-self.min())
+
         def helf_width(self) -> float:
             """
             半宽
             即 (max-min)/2
             这个方法用于求束斑大小
             """
-            return (self.max()-self.min())/2
+            return self.width()/2
 
         def clear(self):
             """

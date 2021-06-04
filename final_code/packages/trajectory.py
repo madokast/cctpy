@@ -21,7 +21,7 @@ from packages.point import *
 from packages.constants import *
 from packages.base_utils import BaseUtils
 from packages.local_coordinate_system import LocalCoordinateSystem
-from packages.lines import *
+from packages.line2s import *
 
 
 class Trajectory(Line2):

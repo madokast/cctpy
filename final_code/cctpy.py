@@ -10,7 +10,7 @@ from packages.constants import *
 from packages.base_utils import BaseUtils
 from packages.point import P2, P3, ValueWithDistance
 from packages.local_coordinate_system import LocalCoordinateSystem
-from packages.lines import Line2, StraightLine2, ArcLine2
+from packages.line2s import Line2, StraightLine2, ArcLine2
 from packages.trajectory import Trajectory
 from packages.magnets import *
 from packages.cct import CCT

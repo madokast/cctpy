@@ -5,7 +5,7 @@ from work.A04run import run
 class Myproblem(ea.Problem):
     def __init__(self):
         name = 'FirstSection'  # Name of the question,dosen't matter
-        M = 9  # 目标维度
+        M = 11  # 目标维度
         maxormins = [1] * M  # 目标是要最大还是最小 Want the maximum or the minimun of the target,[1] for the min, [0] for the max
         Dim = 14  # 变量维度
         varTypes = ([0] * 12) + ([1] * 2) # 变量类型浮点/整数, [0] for real number , [1] for integer
