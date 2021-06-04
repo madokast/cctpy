@@ -22,6 +22,7 @@ from packages.constants import *
 from packages.base_utils import BaseUtils
 from packages.local_coordinate_system import LocalCoordinateSystem
 from packages.line2s import *
+from packages.line3s import *
 from packages.trajectory import Trajectory
 
 
@@ -256,6 +257,69 @@ class Magnet:
 
         return ret
 
+    def multipole_field_along_line3(
+            self,
+            line3: Line3,
+            order: int,
+            good_field_area_width: float = 10 * MM,
+            step: float = 1 * MM,
+            point_number: int = 10,
+            plane_direct: P3 = P3.z_direct()
+    ) -> List[ValueWithDistance[List[float]]]:
+        """
+        计算本对象在三维曲线 line3 上的各极谐波磁场分布
+        line3 三维曲线
+        order 谐波阶数，0阶求二级场，1阶求二四极场，2阶求二四六极场，以此类推
+        good_field_area_width 好场区范围，在水平垂向取点时，从这个范围选取
+        step 三维曲线 line2 步长，步长越多，返回的数组长度越长
+        point_number 水平垂向取点数目，只有取点数目多于 order，才能正确拟合高次谐波
+        plane_direct 确定研究平面，见 Line3.right_hand_side_point() 方法的注释
+
+        这个方法主要用于 COSY 三维轨迹切片
+
+        实现于 2021年6月4日
+        """
+        # 自变量
+        xs: List[float] = BaseUtils.linspace(
+            -good_field_area_width / 2, good_field_area_width / 2, point_number
+        )
+
+        # line2 长度
+        length = line3.get_length()
+
+        # 离散距离
+        distances = BaseUtils.linspace(0, length, int(length / step) + 1)
+
+        # 返回值
+        ret: List[ValueWithDistance[List[float]]] = []
+
+        for s in distances:
+            right_hand_point: P3 = line3.right_hand_side_point(
+                s=s, d=good_field_area_width / 2, plane_direct=plane_direct
+            )
+            left_hand_point: P3 = line3.left_hand_side_point(
+                s=s, d=good_field_area_width / 2, plane_direct=plane_direct
+            )
+
+            points: List[P3] = BaseUtils.linspace(
+                right_hand_point, left_hand_point, point_number
+            )
+
+            # 磁场 bz
+            ys: List[float] = [self.magnetic_field_at(p).z for p in points]
+
+            # 拟合
+            gradients: List[float] = BaseUtils.polynomial_fitting(
+                xs, ys, order)
+
+            # 乘系数，i次项乘上 i!
+            for i in range(2, len(gradients)):
+                gradients[i] = gradients[i] * math.factorial(i)
+
+            ret.append(ValueWithDistance(value=gradients, distance=s))
+
+        return ret
+
     def integration_field(
             self,
             line2: Line2,
@@ -426,14 +490,14 @@ class CombinedMagnet(Magnet):
         super().__init__()
         self.__magnets: List[Magnet] = list(magnets)
 
-    def add(self,magnet:Magnet)->"CombinedMagnet":
+    def add(self, magnet: Magnet) -> "CombinedMagnet":
         """
         添加一个磁铁
         """
         self.__magnets.append(magnet)
         return self
 
-    def get_magnets(self)->List[Magnet]:
+    def get_magnets(self) -> List[Magnet]:
         """
         暴露内部磁铁数组
         """

@@ -25,7 +25,7 @@ class CosyMap:
         self.map = map
         self.contributionLinesString = map.split('\n')
 
-    def apply(self, p0: PhaseSpaceParticle, order: int = 1, print_detail:bool=False,file=None) -> PhaseSpaceParticle:
+    def apply(self, p0: PhaseSpaceParticle, order: int = 1, print_detail: bool = False, file=None) -> PhaseSpaceParticle:
         """
         map 作用于相空间粒子 p0，返回作用后的结果
         order 表示需要考虑的阶数，注意应不大于构造 CosyMap 时传入的阶数
@@ -71,7 +71,7 @@ class CosyMap:
                 if file is None:
                     print(f"{contribution_describing} {xContribution* contributionBy} {xpContribution* contributionBy} {yContribution* contributionBy} {ypContribution* contributionBy}")
                 else:
-                    print(f"{contribution_describing} {xContribution* contributionBy} {xpContribution* contributionBy} {yContribution* contributionBy} {ypContribution* contributionBy}",file=file)
+                    print(f"{contribution_describing} {xContribution* contributionBy} {xpContribution* contributionBy} {yContribution* contributionBy} {ypContribution* contributionBy}", file=file)
 
         return PhaseSpaceParticle(x, xp, y, yp, p0.z, p0.delta)
 
@@ -157,3 +157,266 @@ class CosyMap:
 
         return p1.x - p0.x
 
+
+class ParticleGenerator:
+    """
+    粒子脚本生成
+    """
+    pass
+
+
+class MagnetSlicer:
+    """
+    磁场切片
+    """
+    @staticmethod
+    def slice_trajectory(
+        magnet: Magnet,
+        trajectory: Line2,
+        Bp: float,
+        aperture: float = 60*MM,
+        good_field_area_width: float = 60*MM,
+        min_step_length: float = 1*MM,
+        tolerance: float = 0.1,
+        ignore_radisu: float = 50*M,
+        ignore_gradient: float = 0.1,
+        ignore_second_gradient: float = 1.0,
+    ) -> List[str]:
+        """
+        将磁铁切片，得到可以导入 cosy 的脚本
+        magnet                   切片的磁铁/磁场，一般是 Beamline
+        trajectory               设计轨道，切片磁场计算位于轨道上
+        Bp                       磁钢度
+        aperture                 元件孔径
+        good_field_area_width    好长度总长度
+        min_step_length          最小切片长度（如果相邻的切片参数几乎一致，代码会自动合并切片）
+        tolerance                容忍差值，差值范围内的切片会合并，减少总切片数目
+        ignore_radisu            偏转半径大于此值的偏转磁铁，将视为偏移段
+        ignore_gradient          梯度小于此值的四极场，将置零
+        ignore_second_gradient   二阶梯度小于此值的六极场，将置零
+
+        返回值为 cosy 切片脚本数组
+        """
+        ret: List[str] = []
+
+        multipole_field_along_trajectory: List[ValueWithDistance[List[float]]] = (
+            magnet.multipole_field_along(
+                line2=trajectory,
+                order=2,
+                good_field_area_width=good_field_area_width,
+                step=min_step_length,
+                point_number=6
+            )
+        )
+
+        size = len(multipole_field_along_trajectory)
+
+        # 实际步长
+        real_step = multipole_field_along_trajectory[1].distance - \
+            multipole_field_along_trajectory[0].distance
+
+        i = 0
+
+        total_length = 0.0
+
+        while i < size-1:
+            multipole_field0: List[float] = multipole_field_along_trajectory[i].value
+
+            B0 = multipole_field0[0]
+            if (abs(Bp / B0) > ignore_radisu):
+                B0 = 0
+            T0 = multipole_field0[1]
+            if (abs(T0) < ignore_gradient):
+                T0 = 0
+            L0 = multipole_field0[2]
+            if (abs(L0) < ignore_second_gradient):
+                L0 = 0
+
+            Bs = [B0]
+            Ts = [T0]
+            Ls = [L0]
+
+            for j in range(i+1, size-1):
+                multipole_field: List[float] = multipole_field_along_trajectory[j].value
+
+                B = multipole_field[0]
+                if (abs(Bp / B) > ignore_radisu):
+                    B = 0
+                T = multipole_field[1]
+                if (abs(T) < ignore_gradient):
+                    T = 0
+                L = multipole_field[2]
+                if (abs(L) < ignore_second_gradient):
+                    L = 0
+
+                Bs.append(B)
+                Ts.append(T)
+                Ls.append(L)
+
+                if (
+                        BaseUtils.Statistic.add_all(Bs).undulate() > tolerance or
+                        BaseUtils.Statistic.add_all(Ts).undulate() > tolerance or
+                        BaseUtils.Statistic.add_all(Ls).undulate() > tolerance):
+                    break
+
+            B0 = BaseUtils.Statistic().add_all(Bs).average()
+            T0 = BaseUtils.Statistic().add_all(Ts).average()
+            L0 = BaseUtils.Statistic().add_all(Ls).average()
+
+            length = real_step * (j-i)
+
+            total_length += length
+
+            i = j  # !!
+
+            r = Bp/B0  # 半径，有正负
+
+            angle = BaseUtils.radian_to_angle(length/abs(r))  # 偏转角度
+
+            change_direct = 'CB ;' if r < 0 else ''  # r<0 时改变偏转方向
+
+            n1 = -r / B0 * T0
+
+            n2 = -r * r / B0 * L0
+
+            b2 = T0 * aperture
+
+            b3 = L0 * aperture * aperture
+
+            cosy_script = None
+
+            if abs(r) > ignore_radisu:
+                cosy_script = f"M5 {length} {b2} {b3} 0 0 0 {aperture} ;"
+            else:
+                cosy_script = f"{change_direct} MS {abs(r)} {angle} {aperture} {n1} {n2} 0 0 0 ; {change_direct}"
+
+            ret.append(cosy_script)
+
+        print(f"切片长度{len(ret)}")
+        return ret
+
+    @staticmethod
+    def slice_track(
+        magnet: Magnet,
+        track: Line3,
+        Bp: float,
+        aperture: float = 60*MM,
+        good_field_area_width: float = 60*MM,
+        min_step_length: float = 1*MM,
+        tolerance: float = 0.1,
+        ignore_radisu: float = 50*M,
+        ignore_gradient: float = 0.1,
+        ignore_second_gradient: float = 1.0,
+    ) -> List[str]:
+        """
+        将磁铁切片，得到可以导入 cosy 的脚本
+        magnet                   切片的磁铁（磁场，一般是 Beamline）
+        track                    粒子轨迹，三维曲线，切片磁场计算位于曲线上
+        Bp                       磁钢度
+        aperture                 元件孔径
+        good_field_area_width    好长度总长度
+        min_step_length          最小切片长度（如果相邻的切片参数几乎一致，代码会自动合并切片）
+        tolerance                容忍差值，差值范围内的切片会合并，减少总切片数目
+        ignore_radisu            偏转半径大于此值的偏转磁铁，将视为偏移段
+        ignore_gradient          梯度小于此值的四极场，将置零
+        ignore_second_gradient   二阶梯度小于此值的六极场，将置零
+
+        返回值为 cosy 切片脚本数组
+        """
+        ret: List[str] = []
+
+        multipole_field_along_trajectory: List[ValueWithDistance[List[float]]] = (
+            magnet.multipole_field_along_line3(
+                line3=track,
+                order=2,
+                good_field_area_width=good_field_area_width,
+                step=min_step_length,
+                point_number=6
+            )
+        )
+
+        size = len(multipole_field_along_trajectory)
+
+        # 实际步长
+        real_step = multipole_field_along_trajectory[1].distance - \
+            multipole_field_along_trajectory[0].distance
+
+        i = 0
+
+        total_length = 0.0
+
+        while i < size-1:
+            multipole_field0: List[float] = multipole_field_along_trajectory[i].value
+
+            B0 = multipole_field0[0]
+            if (abs(Bp / B0) > ignore_radisu):
+                B0 = 0
+            T0 = multipole_field0[1]
+            if (abs(T0) < ignore_gradient):
+                T0 = 0
+            L0 = multipole_field0[2]
+            if (abs(L0) < ignore_second_gradient):
+                L0 = 0
+
+            Bs = [B0]
+            Ts = [T0]
+            Ls = [L0]
+
+            for j in range(i+1, size-1):
+                multipole_field: List[float] = multipole_field_along_trajectory[j].value
+
+                B = multipole_field[0]
+                if (abs(Bp / B) > ignore_radisu):
+                    B = 0
+                T = multipole_field[1]
+                if (abs(T) < ignore_gradient):
+                    T = 0
+                L = multipole_field[2]
+                if (abs(L) < ignore_second_gradient):
+                    L = 0
+
+                Bs.append(B)
+                Ts.append(T)
+                Ls.append(L)
+
+                if (
+                        BaseUtils.Statistic.add_all(Bs).undulate() > tolerance or
+                        BaseUtils.Statistic.add_all(Ts).undulate() > tolerance or
+                        BaseUtils.Statistic.add_all(Ls).undulate() > tolerance):
+                    break
+
+            B0 = BaseUtils.Statistic().add_all(Bs).average()
+            T0 = BaseUtils.Statistic().add_all(Ts).average()
+            L0 = BaseUtils.Statistic().add_all(Ls).average()
+
+            length = real_step * (j-i)
+
+            total_length += length
+
+            i = j  # !!
+
+            r = Bp/B0  # 半径，有正负
+
+            angle = BaseUtils.radian_to_angle(length/abs(r))  # 偏转角度
+
+            change_direct = 'CB ;' if r < 0 else ''  # r<0 时改变偏转方向
+
+            n1 = -r / B0 * T0
+
+            n2 = -r * r / B0 * L0
+
+            b2 = T0 * aperture
+
+            b3 = L0 * aperture * aperture
+
+            cosy_script = None
+
+            if abs(r) > ignore_radisu:
+                cosy_script = f"M5 {length} {b2} {b3} 0 0 0 {aperture} ;"
+            else:
+                cosy_script = f"{change_direct} MS {abs(r)} {angle} {aperture} {n1} {n2} 0 0 0 ; {change_direct}"
+
+            ret.append(cosy_script)
+
+        print(f"切片长度{len(ret)}")
+        return ret

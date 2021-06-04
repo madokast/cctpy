@@ -519,6 +519,12 @@ class BaseUtils:
             """
             return self.__data
 
+        def size(self) -> int:
+            """
+            元素数目
+            """
+            return len(self.__data)
+
         def add(self, val: float) -> 'BaseUtils.Statistic':
             """
             添加元素
@@ -538,10 +544,10 @@ class BaseUtils:
             最大值
             """
             return numpy.max(self.__data)
-        
-        def absolute_max(self)->float:
+
+        def absolute_max(self) -> float:
             """
-            
+
             """
             return numpy.max(numpy.abs(self.__data))
 
@@ -563,7 +569,6 @@ class BaseUtils:
             """
             return sum(self.__data) / len(self.__data)
 
-
         def width(self) -> float:
             """
             宽度
@@ -579,6 +584,23 @@ class BaseUtils:
             这个方法用于求束斑大小
             """
             return self.width()/2
+
+        def undulate(self) -> float:
+            """
+            求 abs((max - min) / average)
+            """
+            if self.size() == 1:
+                return 0.0
+            else:
+                max = self.max()
+                min = self.min()
+                average = self.average()
+                if BaseUtils.equal(max, 0, err=1e-5) and BaseUtils.equal(min, 0, err=1e-5):
+                    return 0.0
+                if BaseUtils.equal(average, 0, err=1e-5):
+                    return 0.0
+
+                return abs((max - min) / average)
 
         def clear(self):
             """
