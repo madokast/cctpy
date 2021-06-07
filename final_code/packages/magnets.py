@@ -512,6 +512,13 @@ class CombinedMagnet(Magnet):
             B += m.magnetic_field_at(point)
         return B
 
+    def remove(self,m:Magnet)->'CombinedMagnet':
+        """
+        移除一个磁场/磁铁
+        """
+        self.__magnets.remove(m)
+        return self
+
 
 class ApertureObject:
     """

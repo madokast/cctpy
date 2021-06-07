@@ -113,6 +113,13 @@ class Plot3:
             )
 
     @staticmethod
+    def plot_line3(line3: Line3, step: float = 1 * MM, describe="r") -> None:
+        """
+        绘制 line3
+        """
+        Plot3.plot_p3s(line3.disperse3d(step=step), describe)
+
+    @staticmethod
     def plot_beamline(beamline: Beamline, describes=["r-"]) -> None:
         """
         绘制 beamline
@@ -457,7 +464,7 @@ class Plot2:
 
     @staticmethod
     def plot_p3s(
-            ps: List[P3], p3_to_p2: Callable = lambda p3: P2(p3.x, p3.y), describe="r-"
+            ps: List[P3], p3_to_p2: Callable[[P3],P2] = lambda p3: P2(p3.x, p3.y), describe="r-"
     ) -> None:
         """
         绘制点 P3 数组，多个点

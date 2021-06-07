@@ -246,7 +246,10 @@ class Brick8s:
         )
 
 
-class OperaConductor:
+class OperaConductorScript:
+    """
+    一个纯静态类
+    """
     @staticmethod
     def to_opera_cond_script(brick8s_list: List[Brick8s]) -> str:
         ret = [OPERA_CONDUCTOR_SCRIPT_HEAD]
@@ -256,19 +259,6 @@ class OperaConductor:
         ret.append(OPERA_CONDUCTOR_SCRIPT_TAIL)
 
         return '\n'.join(ret)
-
-    @staticmethod
-    def create_by_cct(cct: CCT, channel_width: float, channel_depth: float,
-                      label: str, disperse_number_per_winding: int) -> 'OperaConductor':
-        cct_brick8s = Brick8s.create_by_cct(
-            cct=cct,
-            channel_width=channel_width,
-            channel_depth=channel_depth,
-            label=label,
-            disperse_number_per_winding=disperse_number_per_winding
-        )
-
-        return OperaConductor.to_opera_cond_script(cct_brick8s.to_brick8_list())
 
 
 class FieldWIthPosion:

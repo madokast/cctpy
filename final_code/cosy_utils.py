@@ -158,11 +158,35 @@ class CosyMap:
         return p1.x - p0.x
 
 
-class ParticleGenerator:
+class SR:
     """
     粒子脚本生成
     """
-    pass
+    COLOR_BLACK = 1
+    COLOR_BLUE = 2
+    COLOR_RED = 3
+    COLOR_YELLOW = 4
+    COLOR_GREEN = 5
+    COLOR_WHITE = 10
+
+    @classmethod
+    def to_cosy_sr(cls, phase_space_particle: Union[PhaseSpaceParticle, List[PhaseSpaceParticle]], color: int = COLOR_BLUE) -> Union[str, List[str]]:
+        """
+        将相空间粒子 PhaseSpaceParticle 转为 COSY 脚本 SR < x > < xp > < y > < yp > <T> <dp> <G> <Z> <color> ;
+
+        color 表示 
+        """
+        if isinstance(phase_space_particle, PhaseSpaceParticle):
+            return (
+                f"SR {phase_space_particle.x} {phase_space_particle.xp} "
+                + f"{phase_space_particle.y} {phase_space_particle.yp} 0 "
+                + f"{phase_space_particle.delta} 0 0 {color} ;"
+            )
+        elif isinstance(phase_space_particle, List):
+            return '\n'.join([cls.to_cosy_sr(p) for p in phase_space_particle])
+        else:
+            print(
+                f"phase_space_particle = {phase_space_particle}输入不是 PhaseSpaceParticle 对象，或 PhaseSpaceParticle 对象数组")
 
 
 class MagnetSlicer:
@@ -205,7 +229,7 @@ class MagnetSlicer:
                 order=2,
                 good_field_area_width=good_field_area_width,
                 step=min_step_length,
-                point_number=6
+                point_number=10
             )
         )
 
@@ -223,7 +247,7 @@ class MagnetSlicer:
             multipole_field0: List[float] = multipole_field_along_trajectory[i].value
 
             B0 = multipole_field0[0]
-            if (abs(Bp / B0) > ignore_radisu):
+            if (abs(B0) < 1e-6 or abs(Bp / B0) > ignore_radisu):
                 B0 = 0
             T0 = multipole_field0[1]
             if (abs(T0) < ignore_gradient):
@@ -236,11 +260,12 @@ class MagnetSlicer:
             Ts = [T0]
             Ls = [L0]
 
+            j = i+1  # 大漏洞，python 中的 for range 与其他语言的 for(;;) 不是完全相同的
             for j in range(i+1, size-1):
                 multipole_field: List[float] = multipole_field_along_trajectory[j].value
 
                 B = multipole_field[0]
-                if (abs(Bp / B) > ignore_radisu):
+                if (abs(B) < 1e-6 or abs(Bp / B) > ignore_radisu):
                     B = 0
                 T = multipole_field[1]
                 if (abs(T) < ignore_gradient):
@@ -254,9 +279,9 @@ class MagnetSlicer:
                 Ls.append(L)
 
                 if (
-                        BaseUtils.Statistic.add_all(Bs).undulate() > tolerance or
-                        BaseUtils.Statistic.add_all(Ts).undulate() > tolerance or
-                        BaseUtils.Statistic.add_all(Ls).undulate() > tolerance):
+                        BaseUtils.Statistic().add_all(Bs).undulate() > tolerance or
+                        BaseUtils.Statistic().add_all(Ts).undulate() > tolerance or
+                        BaseUtils.Statistic().add_all(Ls).undulate() > tolerance):
                     break
 
             B0 = BaseUtils.Statistic().add_all(Bs).average()
@@ -269,25 +294,19 @@ class MagnetSlicer:
 
             i = j  # !!
 
-            r = Bp/B0  # 半径，有正负
-
-            angle = BaseUtils.radian_to_angle(length/abs(r))  # 偏转角度
-
-            change_direct = 'CB ;' if r < 0 else ''  # r<0 时改变偏转方向
-
-            n1 = -r / B0 * T0
-
-            n2 = -r * r / B0 * L0
-
-            b2 = T0 * aperture
-
-            b3 = L0 * aperture * aperture
+            r = (ignore_radisu + 1) if abs(B0) < 1e-6 else Bp/B0  # 半径，有正负
 
             cosy_script = None
 
             if abs(r) > ignore_radisu:
+                b2 = T0 * aperture
+                b3 = L0 * aperture * aperture
                 cosy_script = f"M5 {length} {b2} {b3} 0 0 0 {aperture} ;"
             else:
+                angle = BaseUtils.radian_to_angle(length/abs(r))  # 偏转角度
+                n1 = -r / B0 * T0
+                n2 = -r * r / B0 * L0
+                change_direct = 'CB ;' if r < 0 else ''  # r<0 时改变偏转方向
                 cosy_script = f"{change_direct} MS {abs(r)} {angle} {aperture} {n1} {n2} 0 0 0 ; {change_direct}"
 
             ret.append(cosy_script)
@@ -362,6 +381,7 @@ class MagnetSlicer:
             Ts = [T0]
             Ls = [L0]
 
+            j = i+1
             for j in range(i+1, size-1):
                 multipole_field: List[float] = multipole_field_along_trajectory[j].value
 

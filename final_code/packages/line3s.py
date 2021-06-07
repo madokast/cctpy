@@ -86,11 +86,11 @@ class Line3:
 
         return ps + (ds@plane_direct).change_length(d)
 
-    def left_hand_side_point(self, s: float, d: float) -> P3:
+    def left_hand_side_point(self, s: float, d: float, plane_direct: P3) -> P3:
         """
         左手侧。见 right_hand_side_point
         """
-        return self.right_hand_side_point(s, -d)
+        return self.right_hand_side_point(s, -d, plane_direct)
 
     def right_hand_side_line3(self, d: float, plane_direct: P3) -> 'Line3':
         """
@@ -168,63 +168,100 @@ class FunctionLine3(Line3):
     函数解析式表述的 Line3
     一般用于任意线圈的构建、CCT 洛伦兹力的分析等
 
-    注意：FunctionLine3 中 point_at(s) 和 direct_at(s)
-    中的 s 不再是曲线位置 s，而是内部函数解析式自变量 s
+    为了计算 length point_at 和 direct_at 等，将其离散化处理
+
+    这是一个不可变类
     """
 
-    def __init__(self, p3_function: Callable[[float], P3], start: float, end: float,
+    def __init__(self,
+                 p3_function: Callable[[float], P3],
+                 start: float,
+                 end: float,
                  direct_function: Optional[Callable[[float], P3]] = None,
-                 delta_for_compute_direct_function: float = 0.1*MM) -> None:
+                 delta_for_disperse: float = 1*MM,
+                 delta_for_compute_direct_function: float = 0.1*MM
+                 ) -> None:
         """
         p3_function 曲线方程  p = p(s)
         start 曲线起点对应的自变量 s 值
         end 曲线终点对应的自变量 s 值
-        direct_function 曲线方向方程， d = p'(s)，可以为空，若为空则 d = (p(s+Δ) - p(s))/Δ 计算而得
-        delta_for_compute_direct_function 计算曲线方向方程 d(s) 时 Δ 取值，默认 0.1 毫米。同时还用于去曲线长度计算
+        direct_function 曲线方向函数 d = p'(s)
+        delta_for_disperse 离散步长，对应 start to end
+        delta_for_compute_direct_function 计算微分时的步长
         """
         super().__init__()
-        self.p3_function = p3_function
-        self.start = start
-        self.end = end
-        self.delta_for_compute_direct_function = delta_for_compute_direct_function
+        self.__p3_function = p3_function
+        self.__start = start
+        self.__end = end
+        # self.__delta_for_disperse = delta_for_disperse
 
+        # # 离散化
+        # number: int = int(math.ceil(
+        #     abs(self.__end-self.__start) /
+        #     self.__delta_for_disperse
+        # )) + 1
+        # disperse_line3 = [
+        #     self.__p3_function(s) for s in BaseUtils.linspace(self.__start, self.__end, number)
+        # ]
+
+        # self.__disperse_line3 = DiscretePointLine3(disperse_line3)
+
+        # 函数方向
         if direct_function is None:
             def direct_function(s) -> P3:
                 return (
-                    self.p3_function(s+delta_for_compute_direct_function) -
-                    self.p3_function(s)
+                    self.__p3_function(s+delta_for_compute_direct_function) -
+                    self.__p3_function(s)
                 )/delta_for_compute_direct_function
 
-        self.direct_function = direct_function
+        self.__direct_function = direct_function
+
 
     def get_length(self) -> float:
         """
         曲线长度，注意不是 self.end-self.start
         """
-        print("FunctionLine3的长度不是精确值，采用积分方法计算")
+        # return self.__disperse_line3.get_length()
 
-        disperse_line3 = self.disperse3d(
-            step=self.delta_for_compute_direct_function)
-
-        length = 0.0
-        for i in range(len(disperse_line3)-1):
-            pre = disperse_line3[i]
-            cur = disperse_line3[i+1]
-            length += (pre-cur).length()
-
-        return length
+        raise NotImplemented
 
     def point_at(self, s: float) -> P3:
         """
         s 不再是曲线位置 s，而是内部函数解析式自变量 s
         """
-        return self.p3_function(s)
+
+        # return self.__disperse_line3.point_at(s)
+
+        raise NotImplemented
 
     def direct_at(self, s: float) -> P3:
         """
         s 不再是曲线位置 s，而是内部函数解析式自变量 s
         """
-        return self.direct_function(s)
+        # return self.__disperse_line3.direct_at(s)
+
+        raise NotImplemented
+
+    def point_at_p3_function(self, s: float) -> P3:
+        """
+        以 p3_function 计算 s 处的位置
+        """
+        return self.__p3_function(s)
+
+    def direct_at_p3_function(self, s: float) -> P3:
+        """
+        以 direct_function 计算 s 处的方向
+        """
+        return self.__direct_function(s)
+
+    def get_start(self) -> float:
+        return self.__start
+
+    def get_end(self) -> float:
+        return self.__end
+
+    def get_p3_function(self)->Callable[[float], P3]:
+        return self.__p3_function
 
 
 class TwoPointLine3(Line3):
