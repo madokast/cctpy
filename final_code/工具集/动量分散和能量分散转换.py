@@ -1,3 +1,11 @@
+"""
+CCT 建模优化代码
+工具集
+
+作者：赵润晓
+日期：2021年6月7日
+"""
+
 import os
 import sys
 curPath = os.path.abspath(os.path.dirname(__file__))

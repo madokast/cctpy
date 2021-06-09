@@ -50,14 +50,15 @@ uniform_magnet243 = Magnet.uniform_magnet(magnetic_field=P3(z=2.4321282996))
 # 函数 run_only(p,m,length,footstep,concurrency_level,report) 让粒子(群)在磁场中运动 length 距离
 # 函数没有返回值。粒子运动完成后，粒子信息（位置、速度等）反映运动完成时的值
 # 参数意义和可选值如下
-# p 粒子 RunningParticle，或者粒子数组 [RunningParticle...]。注意运行后，粒子
+# p 粒子 RunningParticle，或者粒子数组 [RunningParticle...]。注意运行后，粒子发生变化，返回运动后的坐标、速度值。
 # m 磁场
 # length 运动长度
 # footstep 步长，默认 20 mm
 # concurrency_level 并行度，默认值 1
 # report 是否打印并行任务计划，默认 True 打印
 # 下面让粒子 proton250 在 uniform_magnet243 下运动 pi/2 米
-if __name__ == "__main__": # 因为代码后面采用了多线程，所以需要将代码放在 __main__ 里面
+if __name__ == "__main__": 
+    # 因为代码后面采用了多线程，所以需要将代码放在 __main__ 里面
     proton250_0 = proton250.copy() # 拷贝一下，为了后面再次使用
     ParticleRunner.run_only(
         p= proton250_0,
@@ -93,14 +94,15 @@ if __name__ == "__main__": # 因为代码后面采用了多线程，所以需要
 # 这个函数的效果和 run_only() 一样。同样没有返回值
 # 不同点在于前者使用 runge_kutta4 法计算，后者使用 scipy 包采用变步长的方法计算
 # 参数含义如下：
-# p 粒子 RunningParticle，或者粒子数组 [RunningParticle...]。注意运行后，粒子
+# p 粒子 RunningParticle，或者粒子数组 [RunningParticle...]。注意运行后，粒子发生变化，返回运动后的坐标、速度值。
 # m 磁场
 # length 运动长度
 # footstep 步长，默认 20 mm
 # absolute_tolerance 绝对误差，默认 1e-8
 # relative_tolerance 相对误差，默认 1e-8
     ParticleRunner.run_only_ode([proton250_0]*10,uniform_magnet243,math.pi/2)
-    print(proton250_0) # (1.742677909061241e-07, -2.000000108269802, 0.0),v=(-183955178.01500052, -32.05746095441282, 0.0),v0=183955178.0274753
+    print(proton250_0) 
+    # (1.742677909061241e-07, -2.000000108269802, 0.0),v=(-183955178.01500052, -32.05746095441282, 0.0),v0=183955178.0274753
     # 任务运行时会打印任务运行信息：
     # track 10 particles
     # ▇▇▇▇▇▇▇▇▇▇ finished
@@ -114,8 +116,8 @@ if __name__ == "__main__": # 因为代码后面采用了多线程，所以需要
 # footstep 步长，默认 20 mm
     traj = ParticleRunner.run_get_trajectory(proton250_0,uniform_magnet243,math.pi)
     # 去除下面两行注释查看绘图结果
-    # plt.gca(projection="3d").plot(*P3.extract(traj))
-    # plt.show()
+    plt.gca(projection="3d").plot(*P3.extract(traj))
+    plt.show()
 
 # 函数 run_get_all_info() 运行一个粒子，获取全部信息
 # 所谓全部信息即每一步粒子的所有信息，包含位置、速度等，返回值是 RunningParticle 数组

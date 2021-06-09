@@ -25,6 +25,7 @@ from packages.line2s import *
 from packages.trajectory import Trajectory
 from packages.magnets import Magnet
 
+
 class Protons:
     """
     质子相关常量和计算
@@ -455,7 +456,7 @@ class RunningParticle:
         )
         return numpy.array(data_list, dtype=numpy_dtype)
 
-    def detailed_info(self)->str:
+    def detailed_info(self) -> str:
         return f"Particle[p={self.position}, v={self.velocity}], rm={self.relativistic_mass}, e={self.e}, speed={self.speed}, distance={self.distance}]"
 
     @staticmethod
@@ -559,8 +560,12 @@ class ParticleRunner:
 
     @staticmethod
     def run_only(
-            p: Union[RunningParticle, List[RunningParticle]], m: Magnet, length: float, footstep: float = 20 * MM,
-            concurrency_level: int = 1, report: bool = True
+            p: Union[RunningParticle, List[RunningParticle]],
+            m: Magnet,
+            length: float,
+            footstep: float = 20 * MM,
+            concurrency_level: int = 1,
+            report: bool = True
     ) -> Union[RunningParticle, List[RunningParticle]]:
         """
         让粒子 p 在磁场 m 中运动 length 距离，步长 footstep
@@ -626,8 +631,12 @@ class ParticleRunner:
 
     @staticmethod
     def run_only_ode(
-            p: Union[RunningParticle, List[RunningParticle]], m: Magnet, length: float, footstep: float = 20 * MM,
-            absolute_tolerance: float = 1e-8, relative_tolerance: float = 1e-8
+            p: Union[RunningParticle, List[RunningParticle]],
+            m: Magnet,
+            length: float,
+            footstep: float = 20 * MM,
+            absolute_tolerance: float = 1e-8,
+            relative_tolerance: float = 1e-8
     ) -> None:
         """
         让粒子 p 在磁场 m 中运动 length 距离，步长 footstep
@@ -663,7 +672,7 @@ class ParticleRunner:
             for this_p in p:
                 print('▇', end='', flush=True)
                 ParticleRunner.run_only_ode(this_p, m, length, footstep,
-                    absolute_tolerance, relative_tolerance)
+                                            absolute_tolerance, relative_tolerance)
             print(' finished')
 
     @staticmethod
@@ -701,10 +710,10 @@ class ParticleRunner:
 
     @staticmethod
     def run_get_all_info(
-            p: Union[RunningParticle,List[RunningParticle]], 
+            p: Union[RunningParticle, List[RunningParticle]],
             m: Magnet, length: float, footstep: float = 1 * MM,
-            concurrency_level: Optional[int] = None,report:bool=False
-    ) -> Union[List[RunningParticle],List[List[RunningParticle]]]:
+            concurrency_level: Optional[int] = None, report: bool = False
+    ) -> Union[List[RunningParticle], List[List[RunningParticle]]]:
         """
         让粒子 p 在磁场 m 中运动 length 距离，步长 footstep
         获得粒子全部信息
@@ -746,27 +755,25 @@ class ParticleRunner:
                 all_info.append(this_p)
 
             return all_info
-        else: # p is list[p]
+        else:  # p is list[p]
             if concurrency_level is None:
                 concurrency_level = os.cpu_count()
             if concurrency_level == 1:
-                returns:List[List[RunningParticle]] = []
+                returns: List[List[RunningParticle]] = []
                 for each_p in p:
                     returns.append(ParticleRunner.run_get_all_info(
-                        p=each_p,m=m,length=length,footstep=footstep
+                        p=each_p, m=m, length=length, footstep=footstep
                     ))
                 return returns
             else:
                 return BaseUtils.submit_process_task(
                     task=ParticleRunner.run_get_all_info,
                     param_list=[
-                        [this_p,m,length,footstep] for this_p in p
+                        [this_p, m, length, footstep] for this_p in p
                     ],
                     concurrency_level=concurrency_level,
                     report=report
                 )
-
-
 
     @staticmethod
     def run_only_deprecated(
@@ -1091,10 +1098,12 @@ class PhaseSpaceParticle:
         # 修改于 2021年5月1日
         try:
             xp = (coordinate_system.XI * relative_velocity) / (
-                math.sqrt(running_particle.speed**2-(coordinate_system.XI * relative_velocity)**2)
+                math.sqrt(running_particle.speed**2 -
+                          (coordinate_system.XI * relative_velocity)**2)
             )
             yp = (coordinate_system.YI * relative_velocity) / (
-                math.sqrt(running_particle.speed**2-(coordinate_system.YI * relative_velocity)**2)
+                math.sqrt(running_particle.speed**2 -
+                          (coordinate_system.YI * relative_velocity)**2)
             )
         except Exception as e:
             print(f"异常{e}")
@@ -1128,7 +1137,7 @@ class PhaseSpaceParticle:
 
     @staticmethod
     def convert_delta_from_momentum_dispersion_to_energy_dispersion(
-            phaseSpaceParticle:"PhaseSpaceParticle", centerKineticEnergy_MeV
+            phaseSpaceParticle: "PhaseSpaceParticle", centerKineticEnergy_MeV
     ) -> "PhaseSpaceParticle":
         """
         动量分散改动能分散
@@ -1177,7 +1186,7 @@ class PhaseSpaceParticle:
 
     @staticmethod
     def convert_delta_from_energy_dispersion_to_momentum_dispersion(
-            phaseSpaceParticle:"PhaseSpaceParticle", centerKineticEnergy_MeV: float
+            phaseSpaceParticle: "PhaseSpaceParticle", centerKineticEnergy_MeV: float
     ) -> "PhaseSpaceParticle":
         """
         将相空间粒子 phaseSpaceParticle 中 delta 从能量分散转为动量分散
@@ -1529,4 +1538,3 @@ class ParticleFactory:
                 cur_params[0], cur_params[1], cur_params[2], cur_params[3], 0.0, cur_params[4]))
 
         return ps
-

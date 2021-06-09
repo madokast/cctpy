@@ -52,12 +52,12 @@ cct = CCT(
     end_point_in_ksi_phi_coordinate=P2(2*30*math.pi,30/180*math.pi)
 )
 # 绘制 cct 三维分布
-# Plot3.plot_cct(cct)
-# Plot3.show()
+Plot3.plot_cct(cct)
+Plot3.show()
 
 # 绘制 ksi_phi_coordinate cct 二维曲线
-# Plot2.plot_cct_path2d(cct)
-# Plot2.show()
+Plot2.plot_cct_path2d(cct)
+Plot2.show()
 
 # 函数 phi_ksi_function(ksi) 完成 cct ksi->phi 的映射
 print(cct.phi_ksi_function(2*math.pi)) # 0.01745329251994328

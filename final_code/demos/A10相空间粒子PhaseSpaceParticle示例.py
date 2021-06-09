@@ -25,7 +25,8 @@ pp = PhaseSpaceParticle(
     y=2.5*MM,yp=5.5*MRAD,
     z=0.0,delta=0.05
 )
-print(pp) # x=0.0035,xp=0.0075,y=0.0025,yp=0.0055,z=0.0,d=0.05
+print(pp) 
+# x=0.0035,xp=0.0075,y=0.0025,yp=0.0055,z=0.0,d=0.05
 
 # 函数 project_to_xxp_plane() 和 project_to_yyp_plane() 将相空间映射到 x-xp 平面和 y-yp 平面
 # 可以传入 convert_to_mm 布尔值，修改单位，从 米-弧度 到 毫米-毫弧度
@@ -94,7 +95,7 @@ for pp in pps_xxp2:
 # 类函数 phase_space_particles_project_to_xxp_plane()
 # 类函数 phase_space_particles_project_to_yyp_plane()
 # 类函数 phase_space_particles_project_to_plane()
-# 都是讲多个相空间粒子，映射到 x-xp / y-yp 平面，返回值是 P2 的数组
+# 都是将多个相空间粒子，映射到 x-xp / y-yp 平面，返回值是 P2 的数组
 # 三个函数都可以传入布尔值 convert_to_mm，转换单位从 米-弧度 到 毫米-毫弧度
 # 最后一个函数需要指定 plane_id 取 XXP_PLANE 和 YYP_PLANE，确定平面
 p2_xxp = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(pps_xxp,convert_to_mm=True)
@@ -134,7 +135,8 @@ p_pp = PhaseSpaceParticle.create_from_running_particle(
     coordinate_system=cs,
     running_particle=p
 )
-print(p_pp) # x=1.0,xp=-0.00985736125798635,y=0.0,yp=0.0,z=0.0,d=-0.02251054564650803
+print(p_pp) 
+# x=1.0,xp=-0.00985736125798635,y=0.0,yp=0.0,z=0.0,d=-0.02251054564650803
 
 
 # 函数 convert_delta_from_momentum_dispersion_to_energy_dispersion()
@@ -158,7 +160,8 @@ print(pp) # x=0.0,xp=0.0,y=0.0,yp=0.0,z=0.0,d=0.17896104739526544
 pp = PhaseSpaceParticle(delta=0.1)
 # 转为动量分散，设中心动能为 250 MeV
 pp = PhaseSpaceParticle.convert_delta_from_energy_dispersion_to_momentum_dispersion(pp,250)
-print(pp) # x=0.0,xp=0.0,y=0.0,yp=0.0,z=0.0,d=0.055878081546501715
+print(pp) 
+# x=0.0,xp=0.0,y=0.0,yp=0.0,z=0.0,d=0.055878081546501715
 
 # 函数 __str__() 和 __repr__()，将 PhaseSpaceParticle 转为字符粗，在调用 print() 时自动执行
 # 下面三行代码都打印

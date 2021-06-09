@@ -216,7 +216,6 @@ class FunctionLine3(Line3):
 
         self.__direct_function = direct_function
 
-
     def get_length(self) -> float:
         """
         曲线长度，注意不是 self.end-self.start
@@ -260,7 +259,7 @@ class FunctionLine3(Line3):
     def get_end(self) -> float:
         return self.__end
 
-    def get_p3_function(self)->Callable[[float], P3]:
+    def get_p3_function(self) -> Callable[[float], P3]:
         return self.__p3_function
 
 
@@ -278,6 +277,12 @@ class TwoPointLine3(Line3):
         # 提前计算好长度和方向
         self.__length = (p1-p0).length()
         self.__direct = (p1-p0).normalize()
+
+    def to_vector(self) -> P3:
+        """
+        返回矢量 p0 -> p1
+        """
+        return self.__p1-self.__p0
 
     def get_length(self) -> float:
         return self.__length

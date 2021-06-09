@@ -26,6 +26,26 @@ from packages.line3s import *
 from packages.trajectory import Trajectory
 
 
+class ApertureObject:
+    """
+    表示具有孔径的一个对象
+    可以判断点 point 是在这个对象的孔径内还是孔径外
+
+    只有当粒子轴向投影在元件内部时，才会进行判断，
+    否则即时粒子距离轴线很远，也认为粒子没有超出孔径，
+    这是因为粒子不在元件内时，很可能处于另一个大孔径元件中，这样会造成误判。
+    """
+
+    def is_out_of_aperture(self, point: P3) -> bool:
+        """
+        判断点 point 是在这个对象的孔径内还是孔径外
+        只有当粒子轴向投影在元件内部时，才会进行判断，
+        否则即时粒子距离轴线很远，也认为粒子没有超出孔径，
+        这是因为粒子不在元件内时，很可能处于另一个大孔径元件中，这样会造成误判。
+        """
+        raise NotImplementedError
+
+
 class Magnet:
     """
     表示一个可以求磁场的对象，如 CCT 、 QS 磁铁
@@ -214,6 +234,15 @@ class Magnet:
         step 二维曲线 line2 步长，步长越多，返回的数组长度越长
         point_number 水平垂向取点数目，只有取点数目多于 order，才能正确拟合高次谐波
 
+        order = 0，表示0阶，即返回二极场。
+        order = 1，表示1阶，即返回[二极场,四极场]。
+        order = 2，表示2阶，即返回[二极场,四极场,六极场]。
+
+
+        返回值为 List[ValueWithDistance[List[float]]]，
+        是 ValueWithDistance 对象的一个数组，表示沿着 line2 分布的各极谐波，
+        各极谐波采用数组表示，数组下标0表示二级场，1表示四极场，2表示六极场，以此类推
+
         实现于 2021年5月1日
         """
         # 自变量
@@ -379,6 +408,9 @@ class Magnet:
         """
         多个 magnet 组合
         """
+        for m in magnets:
+            if not isinstance(m, Magnet):
+                raise ValueError(f"{m} 不是磁铁对象")
         return CombinedMagnet(*magnets)
 
 
@@ -401,8 +433,11 @@ class UniformMagnet(Magnet):
         """
         return self.magnetic_field.copy()
 
+    def __str__(self) -> str:
+        return f"均匀磁铁，磁场{self.magnetic_field}"
 
-class LocalUniformMagnet(Magnet):
+
+class LocalUniformMagnet(Magnet, ApertureObject):
     """
     局部圆柱区域产生均匀磁场的磁铁，可以看作一个直线二极磁铁
     local_coordinate_system 局部坐标系
@@ -441,12 +476,31 @@ class LocalUniformMagnet(Magnet):
             return P3.zeros()
         else:
             if (abs(lp.x) > self.aperture_radius
-                or abs(lp.y) > self.aperture_radius
-                or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
-                ):
+                    or abs(lp.y) > self.aperture_radius
+                    or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
+                    ):
                 return P3.zeros()
             else:
                 return self.magnetic_field_vector.copy()
+
+    def is_out_of_aperture(self, point: P3) -> bool:
+        """
+        判断点 point 是在这个对象的孔径内还是孔径外
+        只有当粒子轴向投影在元件内部时，才会进行判断，
+        否则即时粒子距离轴线很远，也认为粒子没有超出孔径，
+        这是因为粒子不在元件内时，很可能处于另一个大孔径元件中，这样会造成误判。
+        """
+        lp = self.local_coordinate_system.point_to_local_coordinate(point)
+        if lp.z < 0 or lp.z > self.length:
+            return True
+        else:
+            if (abs(lp.x) > self.aperture_radius
+                    or abs(lp.y) > self.aperture_radius
+                    or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
+                    ):
+                return True
+            else:
+                return False
 
     @staticmethod
     def create_local_uniform_magnet_along(
@@ -458,6 +512,11 @@ class LocalUniformMagnet(Magnet):
     ) -> "LocalUniformMagnet":
         """
         在设计轨道上创建 LocalUniformMagnet
+        trajectory 设计轨道
+        s 磁铁起点位于设计轨道上的位置
+        magnetic_field 磁场大小，标量，磁场垂直于设计轨道
+        length 磁铁长度
+        aperture_radius 磁铁孔径
         """
         origin: P2 = trajectory.point_at(s)
         z_direct: P2 = trajectory.direct_at(s)
@@ -488,6 +547,9 @@ class CombinedMagnet(Magnet):
         输入磁场 magnetic_field
         """
         super().__init__()
+        for magnet in magnets:
+            if not isinstance(magnet, Magnet):
+                raise ValueError(f"{magnet}不是磁铁对象")
         self.__magnets: List[Magnet] = list(magnets)
 
     def add(self, magnet: Magnet) -> "CombinedMagnet":
@@ -512,32 +574,12 @@ class CombinedMagnet(Magnet):
             B += m.magnetic_field_at(point)
         return B
 
-    def remove(self,m:Magnet)->'CombinedMagnet':
+    def remove(self, m: Magnet) -> 'CombinedMagnet':
         """
         移除一个磁场/磁铁
         """
         self.__magnets.remove(m)
         return self
-
-
-class ApertureObject:
-    """
-    表示具有孔径的一个对象
-    可以判断点 point 是在这个对象的孔径内还是孔径外
-
-    只有当粒子轴向投影在元件内部时，才会进行判断，
-    否则即时粒子距离轴线很远，也认为粒子没有超出孔径，
-    这是因为粒子不在元件内时，很可能处于另一个大孔径元件中，这样会造成误判。
-    """
-
-    def is_out_of_aperture(self, point: P3) -> bool:
-        """
-        判断点 point 是在这个对象的孔径内还是孔径外
-        只有当粒子轴向投影在元件内部时，才会进行判断，
-        否则即时粒子距离轴线很远，也认为粒子没有超出孔径，
-        这是因为粒子不在元件内时，很可能处于另一个大孔径元件中，这样会造成误判。
-        """
-        raise NotImplementedError
 
 
 class QS(Magnet, ApertureObject):

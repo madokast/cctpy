@@ -133,3 +133,9 @@ dmypy.json
 /code/c/cct_for_cuda/.vs/
 /code/c/cct_for_cuda/x64/
 final_code/record
+final_code.zip
+
+*.gif
+
+*.zip
+final_code.zip

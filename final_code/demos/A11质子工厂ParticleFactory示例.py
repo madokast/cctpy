@@ -14,9 +14,9 @@ from cctpy import *
 
 # ParticleFactory 类提供了方便的构造质子/质子群的函数
 # 其中函数返回值类型都是 RunningParticle 或者 RunningParticle 数组
-# 其中的函数都是类函数，不需要构建 ParticleFactory 的实例
+# 其中的函数都是静态函数，不需要构建 ParticleFactory 的实例
 
-# 类函数 create_proton(position,direct,kinetic_MeV)
+# 静态函数 create_proton(position,direct,kinetic_MeV)
 # 通过确定质子的 位置、速度方向、动能 来创建一个质子
 # 以下创建一个位于原点、朝 x 正方向运动的、250 MeV 的质子
 p = ParticleFactory.create_proton(
@@ -28,7 +28,7 @@ print(p.detailed_info())
 # Particle[p=(0.0, 0.0, 0.0), v=(183955178.0274753, 0.0, 0.0)], rm=2.1182873748205775e-27, e=1.6021766208e-19, speed=183955178.0274753, distance=0.0
 
 
-# 类函数 create_proton_by_position_and_velocity(position,velocity)
+# 静态函数 create_proton_by_position_and_velocity(position,velocity)
 # 通过粒子位置、速度来创建一个质子
 # # 以下创建一个位于 (1,2,3),速度 (1e8,1e7,0) 的质子 
 p = ParticleFactory.create_proton_by_position_and_velocity(
@@ -38,7 +38,7 @@ p = ParticleFactory.create_proton_by_position_and_velocity(
 print(p.detailed_info())
 # Particle[p=(1.0, 2.0, 3.0), v=(100000000.0, 10000000.0, 0.0)], rm=1.775348694518523e-27, e=1.6021766208e-19, speed=100498756.21120891, distance=0.0]
 
-# 类函数 create_proton_along(trajectory,s,kinetic_MeV)
+# 静态函数 create_proton_along(trajectory,s,kinetic_MeV)
 # 创建一个位于轨迹 trajectory 的 s 位置处，运动方向和轨迹相切的，动能为 kinetic_MeV 的质子
 # 这个方法非常实用，下面举例说明
 # 首先创建一个轨迹，一条直线段，起点位于原点、x 正方向、长度 1 米
@@ -57,7 +57,7 @@ p = ParticleFactory.create_proton_along(traj,traj.get_length(),200)
 print(p)
 # p=(1.7071067811865475, 0.2928932188134523, 0.0),v=(120017673.79145485, 120017673.7914548, 0.0),v0=169730622.00034538
 
-# 类函数 create_from_phase_space_particle(ideal_particle,coordinate_system,phase_space_particle)
+# 静态函数 create_from_phase_space_particle(ideal_particle,coordinate_system,phase_space_particle)
 # 将相空间粒子 (x,xp,y,yp,z,δ) 转为三维实际坐标粒子 (位置,速度..)
 # 很明显需要提供以下参数
 # ideal_particle         理想粒子，提供参照，RunningParticle 类
@@ -100,12 +100,12 @@ print(pp2) # x=0.0035,xp=0.007500000000000001,y=0.0,yp=0.0,z=0.0,d=0.09999999999
 
 
 
-# 类函数 create_from_phase_space_particles(ideal_particle,coordinate_system,phase_space_particles)
+# 静态函数 create_from_phase_space_particles(ideal_particle,coordinate_system,phase_space_particles)
 # 函数功能和上函数 create_from_phase_space_particle 一致
 # 将多个相空间粒子 (x,xp,y,yp,z,δ) 转为三维实际坐标粒子 (位置,速度..)
 # 主要用于质子束流的模拟
 
-# 类函数 distributed_particles() 随机产生某种分布的质子集合，即 PhaseSpaceParticle 数组
+# 静态函数 distributed_particles() 随机产生某种分布的质子集合，即 PhaseSpaceParticle 数组
 # 仅支持正相椭圆/正相椭球分布，即不支持有倾斜角的相椭圆/相椭球
 # 函数参数很多，介绍如下：
 # x xp y yp delta，指定相椭圆/球参数，例如 3.5mm 7.5mr 3.5mm 7.5mr 0.08

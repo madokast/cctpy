@@ -46,16 +46,20 @@ def create_gantry_beamline(param=[]):
     agcct1_wn = int(param[12]) if len(param) > 0 else 20
     agcct2_wn = int(param[13]) if len(param) > 0 else 20
 
+    DL1 = param[14] if len(param) > 0 else 1.6
+    GAP1 = param[15] if len(param) > 0 else 0.45
+    GAP2 = param[16] if len(param) > 0 else 0.45
+    qs1_length = param[17] if len(param) > 0 else 0.27
+    qs2_length = param[18] if len(param) > 0 else 0.27
+
     ####################################
-    DL1 = 900.78*MM
-    GAP1 = 430.15*MM
-    GAP2 = 370.82*MM
+    
     GAP3 = 431.88*MM
-    qs1_length = 234.01*MM
-    qs2_length = 200.14*MM
     qs3_length = 243.79*MM
     DL2 = 2350.11*MM
 
+    
+    
     qs1_aperture_radius = 60 * MM
     qs2_aperture_radius = 60 * MM
     qs3_aperture_radius = 60 * MM
@@ -70,10 +74,10 @@ def create_gantry_beamline(param=[]):
     agcct1_bending_angle = 22.5 * (agcct1_wn / (agcct1_wn + agcct2_wn))
     agcct2_bending_angle = 22.5 * (agcct2_wn / (agcct1_wn + agcct2_wn))
 
-    agcct12_inner_small_r = 92.5 * MM - 20 * MM  # 92.5
-    agcct12_outer_small_r = 108.5 * MM - 20 * MM  # 83+15
-    dicct12_inner_small_r = 124.5 * MM - 20 * MM  # 83+30+1
-    dicct12_outer_small_r = 140.5 * MM - 20 * MM  # 83+45 +2
+    agcct12_inner_small_r = 92.5 * MM - 20 * MM + 17*MM  # 92.5
+    agcct12_outer_small_r = 108.5 * MM - 20 * MM + 17*MM  # 83+15
+    dicct12_inner_small_r = 124.5 * MM - 20 * MM + 17*MM # 83+30+1
+    dicct12_outer_small_r = 140.5 * MM - 20 * MM + 17*MM # 83+45 +2
 
     dicct345_tilt_angles = [30, 88.773,	98.139, 91.748]
     agcct345_tilt_angles = [101.792, 30, 62.677,	89.705]
@@ -86,10 +90,10 @@ def create_gantry_beamline(param=[]):
     agcct4_bending_angle = -67.5 * (40 / (25 + 40 + 34))
     agcct5_bending_angle = -67.5 * (34 / (25 + 40 + 34))
 
-    agcct345_inner_small_r = 92.5 * MM + 0.1*MM  # 92.5
-    agcct345_outer_small_r = 108.5 * MM + 0.1*MM  # 83+15
-    dicct345_inner_small_r = 124.5 * MM + 0.1*MM  # 83+30+1
-    dicct345_outer_small_r = 140.5 * MM + 0.1*MM  # 83+45 +2
+    agcct345_inner_small_r = 92.5 * MM + 0.1*MM + 17*MM  # 92.5
+    agcct345_outer_small_r = 108.5 * MM + 0.1*MM + 17*MM  # 83+15
+    dicct345_inner_small_r = 124.5 * MM + 0.1*MM + 17*MM  # 83+30+1
+    dicct345_outer_small_r = 140.5 * MM + 0.1*MM + 17*MM  # 83+45 +2
 
     dicct345_winding_number = 128
     part_per_winding = 60
@@ -337,10 +341,17 @@ def run(params: np.ndarray):
         params_and_objs.append(np.concatenate((param, obj)))
 
     # 删除之前的文件
-    path = "./record/A04run.txt"
-    if os.path.exists(path):
-        os.remove(path)
-    np.savetxt(fname=path, X=params_and_objs)
+    while True:
+        try:
+            path = "./record/A04run.txt"
+            if os.path.exists(path):
+                os.remove(path)
+            np.savetxt(fname=path, X=params_and_objs)
+            break
+        except Exception as e:
+            print(f"写文件异常，将重试")
+            print(e)
+
 
     times += 1
 

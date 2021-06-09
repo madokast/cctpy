@@ -100,7 +100,7 @@ qs = QS.create_qs_along(
     length=0.27,
     gradient=20,
     second_gradient=0.0,
-    aperture_radius=100*MM
+    aperture_radius=10*MM
 )
 
 # 不妨进行一次束流跟踪
@@ -127,13 +127,13 @@ for p in ps:
         p=p,m=qs,length=traj.get_length(),footstep=10*MM
     )
     # 取出 x 和 y，各自组成数组
-    tx = P3.extract(t)[0]
-    ty = P3.extract(t)[1]
+    tx,ty,_ = P3.extract(t)
     # 绘图
-    plt.plot(tx,ty)
+    Plot2.plot(tx,ty,describe=None)
 
 # 展示，去除注释查看绘图结果
-# plt.show()
+Plot2.plot(qs)
+Plot2.show()
 
 # 函数 __str__()、__repr__() 将 qs 转为字符串信息，使用 print(qs) 自动执行
 # 下面三个语句均打印：

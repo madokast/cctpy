@@ -409,9 +409,11 @@ class Plot2:
             elif isinstance(param1, List) and isinstance(param2, List):
                 Plot2.plot_xy_array(param1, param2, describe=describe)
             else:
-                print(f"无法绘制{data}")
+                Plot2.plot(param1, describe=describe)
+                Plot2.plot(param2, describe=describe)
         else:
-            print(f"无法绘制{data}")
+            for d in data:
+                Plot2.plot(d, describe=describe)
 
     @staticmethod
     def plot_xy(x: float, y: float, describe="r.") -> None:
@@ -422,7 +424,12 @@ class Plot2:
         if not Plot2.INIT:
             Plot2.__init()
 
-        plt.plot(x, y, describe)
+        if describe is None:
+            plt.plot(x, y)
+        else:
+            plt.plot(x, y, describe)
+
+        
 
     @staticmethod
     def plot_xy_array(xs: List[float], ys: List[float], describe="r-") -> None:
@@ -433,8 +440,11 @@ class Plot2:
         """
         if not Plot2.INIT:
             Plot2.__init()
-
-        plt.plot(xs, ys, describe)
+            
+        if describe is None:
+            plt.plot(xs, ys)
+        else:
+            plt.plot(xs, ys, describe)
 
     @staticmethod
     def plot_p2(p: P2, describe="r") -> None:

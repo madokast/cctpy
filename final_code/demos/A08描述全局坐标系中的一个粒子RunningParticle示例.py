@@ -51,12 +51,12 @@ print(running_particle_random)
 
 # 函数 copy() 复制一个粒子，复制的粒子和原粒子没有依赖
 # 即修改复制的粒子，不会改变原粒子
-# 这个方法常用于复制多个个理想粒子，然后分别修改参数，模拟束流
+# 这个方法常用于复制多个理想粒子，然后分别修改参数，模拟束流
 running_particle_random_copied = running_particle_random.copy()
 running_particle_random_copied.speed=100
 print(running_particle_random) # p=(0.12598114034167662, 0.4077843353758793, 0.15218549925472213),v=(0.7348323133200128, 0.4521171494230116, 0.5055804134837196),v0=1
 print(running_particle_random_copied) # p=(0.12598114034167662, 0.4077843353758793, 0.15218549925472213),v=(0.7348323133200128, 0.4521171494230116, 0.5055804134837196),v0=100
-# 可以看到，可以随意修改粒子速率，但是粒子速度不改变，因此不应该随意使用 RunningParticle 的函数
+# 可以看到，可以随意修改粒子速率，但是粒子速度不改变，这将导致不一致，因此一般情况下不应使用这些底层函数 
 
 # 函数 compute_scalar_momentum()，计算粒子动量，即 speed * relativistic_mass
 # 返回动量单位是 kg m/s
@@ -68,7 +68,8 @@ print(running_particle_random.compute_scalar_momentum()) # 1
 # 这个方法用于生成一组动量分散的粒子
 # scalar_momentum 的单位是 kg m/s
 running_particle_random.change_scalar_momentum(2)
-print(running_particle_random) # p=(0.33316296168838744, 0.7938580738663331, 0.34008909721137903),v=(1.2025435401611133, 0.3651129458584246, 1.5558218313108225),v0=2.0
+print(running_particle_random) 
+# p=(0.33316296168838744, 0.7938580738663331, 0.34008909721137903),v=(1.2025435401611133, 0.3651129458584246, 1.5558218313108225),v0=2.0
 
 # 函数 get_natural_coordinate_system(y_direction)
 # 获得粒子的自然坐标系，其中 z 轴方向即粒子速度方向，另外指定 y 轴方向
@@ -76,7 +77,8 @@ print(running_particle_random) # p=(0.33316296168838744, 0.7938580738663331, 0.3
 # 这个方法只用于相空间和实际三维空间转换
 # 理想粒子的 natural_coordinate_system 即用来确定其他粒子的相空间坐标
 running_particle_random.velocity = P3(1,1,0)
-print(running_particle_random.get_natural_coordinate_system(y_direction=P3.z_direct())) # LOCATION=(0.05578965908696243, 0.9024614358976661, 0.17686810290473776), xi=(-0.7071067811865475, 0.7071067811865475, 0.0), yi=(0.0, -0.0, 0.9999999999999998), zi=(0.7071067811865475, 0.7071067811865475, 0.0)
+print(running_particle_random.get_natural_coordinate_system(y_direction=P3.z_direct())) 
+# LOCATION=(0.05578965908696243, 0.9024614358976661, 0.17686810290473776), xi=(-0.7071067811865475, 0.7071067811865475, 0.0), yi=(0.0, -0.0, 0.9999999999999998), zi=(0.7071067811865475, 0.7071067811865475, 0.0)
 
 # 函数 __str__() 和 __repr__()，将粒子转为字符串，调用 print() 函数时自动执行
 # 仅返回粒子坐标、速度、速率
@@ -106,9 +108,11 @@ print(rp) # p=(0.9720221164124271, 0.45095448716158015, 0.8361092775713064),v=(1
 # 函数 populate(other) 将粒子 other 的全部参数复制到调用者
 # 复制双方无依赖
 rp = RunningParticle(P3.origin(),P3.zeros(),0,0,0,0)
-print(rp) # p=(0.0, 0.0, 0.0),v=(0.0, 0.0, 0.0),v0=0
+print(rp) 
+# p=(0.0, 0.0, 0.0),v=(0.0, 0.0, 0.0),v0=0
 rp.populate(running_particle_random)
-print(rp) # p=(0.7590848416287488, 0.29220215565669594, 0.4094821302260654),v=(1.0, 1.0, 0.0),v0=2.0
+print(rp) 
+# p=(0.7590848416287488, 0.29220215565669594, 0.4094821302260654),v=(1.0, 1.0, 0.0),v0=2.0
 
 # 函数 __sub__() 粒子"减法" 只用来显示两个粒子的差异
 # 一般用于调试
