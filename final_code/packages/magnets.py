@@ -476,8 +476,8 @@ class LocalUniformMagnet(Magnet, ApertureObject):
             return P3.zeros()
         else:
             if (abs(lp.x) > self.aperture_radius
-                    or abs(lp.y) > self.aperture_radius
-                    or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
+                        or abs(lp.y) > self.aperture_radius
+                        or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
                     ):
                 return P3.zeros()
             else:
@@ -495,8 +495,8 @@ class LocalUniformMagnet(Magnet, ApertureObject):
             return True
         else:
             if (abs(lp.x) > self.aperture_radius
-                    or abs(lp.y) > self.aperture_radius
-                    or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
+                        or abs(lp.y) > self.aperture_radius
+                        or math.sqrt(lp.x ** 2 + lp.y ** 2) > self.aperture_radius
                     ):
                 return True
             else:
@@ -752,4 +752,78 @@ class QS(Magnet, ApertureObject):
         常用在将 Magnet 转成 QS
         例如从 Beamline 中取出的 magnets，然后按照真是类型转过去
         """
+        return anything
+
+
+class Q(Magnet, ApertureObject):
+    """
+    Q 铁，见 QS
+    """
+
+    def __init__(
+            self,
+            local_coordinate_system: LocalCoordinateSystem,
+            length: float,
+            gradient: float,
+            aperture_radius: float,
+    ) -> None:
+        super().__init__()
+        self.local_coordinate_system = local_coordinate_system
+        self.length = float(length)
+        self.gradient = float(gradient)
+        self.aperture_radius = float(aperture_radius)
+
+        self.qs = QS(
+            local_coordinate_system=local_coordinate_system,
+            length=length,
+            gradient=gradient,
+            second_gradient=0.0,
+            aperture_radius=aperture_radius,
+        )
+
+    def __str__(self) -> str:
+        """
+        since v0.1.1
+        """
+        return f"Q:local_coordinate_system={self.local_coordinate_system}, length={self.length}, gradient={self.gradient}, aperture_radius={self.aperture_radius}"
+
+    def __repr__(self) -> str:
+        """
+        since v0.1.1
+        """
+        return self.__str__()
+
+    def magnetic_field_at(self, point: P3) -> P3:
+        return self.qs.magnetic_field_at(point)
+
+    def is_out_of_aperture(self, point: P3) -> bool:
+        return self.qs.is_out_of_aperture(point)
+
+    @staticmethod
+    def create_q_along(
+            trajectory: Line2,
+            s: float,
+            length: float,
+            gradient: float,
+            aperture_radius: float,
+    ) -> "Q":
+        origin: P2 = trajectory.point_at(s)
+        z_direct: P2 = trajectory.direct_at(s)
+        x_direct: P2 = z_direct.rotate(BaseUtils.angle_to_radian(90))
+
+        lcs: LocalCoordinateSystem = LocalCoordinateSystem(
+            location=origin.to_p3(),
+            x_direction=x_direct.to_p3(),
+            z_direction=z_direct.to_p3(),
+        )
+
+        return QS(
+            local_coordinate_system=lcs,
+            length=length,
+            gradient=gradient,
+            second_gradient=0.0,
+            aperture_radius=aperture_radius,
+        )
+
+    def as_q(anything) -> 'Q':
         return anything

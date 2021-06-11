@@ -328,10 +328,16 @@ class BaseUtils:
         since v0.1.1
         """
         if not cls.__I_AM_SURE_MY_CODE_CLOSED_IN_IF_NAME_EQUAL_MAIN:
-            raise PermissionError(
-                "在使用CPU并行计算前，应确保你的脚本写在if __name__ == '__main__':"
-                + "代码块内部，并显式调用BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()函数"
-            )
+            # 删除激进的报错方式
+            # raise PermissionError(
+            #     "在使用CPU并行计算前，应确保你的脚本写在if __name__ == '__main__':"
+            #     + "代码块内部，并显式调用BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()函数"
+            # )
+            print("警告：")
+            print("当前你正在进行 CPU 并行计算。如果你的脚本没有被")
+            print("if __name__ == '__main__':")
+            print("包裹起来，可能会发生意外。")
+            print("如果出现意外情况，请加上 if __name__ == '__main__': ")
 
         if concurrency_level is None:
             concurrency_level = os.cpu_count()

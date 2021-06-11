@@ -422,12 +422,73 @@ def beamline_phase_ellipse_multi_delta(bl: Beamline, particle_number: int,
 
 
 if __name__ == "__main__":
-    g = HUST_SC_GANTRY()
-    f = g.create_first_bending_part_beamline()
-    s = g.create_second_bending_part_beamline()
-    t = g.create_total_beamline()
+    BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
+    # param = [4.994543592,	40.04650003	,85.82762698,	96.91909089	,95.33845506,	97.55636171	,60.01158632,	83.74210641,	9244.758463,	-7241.295297]
 
-    print(f.get_length())
+    param = [4.373233845,	40	,85.34567767,	97.46179759,	95.92615864,	97.49058727,	60.08368362,	83.65814899,	9243.737555,	-7364.730324]
+
+    qs3_g = param[0]
+    qs3_sg = param[1]
+
+    dicct_tilt_1 = param[2]
+    dicct_tilt_2 = param[3]
+    dicct_tilt_3 = param[4]
+
+    agcct_tilt_0 = param[5]
+    agcct_tilt_2 = param[6]
+    agcct_tilt_3 = param[7]
+
+    dicct_current = param[8]
+    agcct_current = param[9]
+
+    agcct3_wn = 25
+    agcct4_wn = 40
+    agcct5_wn = 34
+
+    g = HUST_SC_GANTRY(
+        qs3_gradient=qs3_g,
+        qs3_second_gradient=qs3_sg,
+        dicct345_tilt_angles=[30, dicct_tilt_1, dicct_tilt_2, dicct_tilt_3],
+        agcct345_tilt_angles=[agcct_tilt_0, 30, agcct_tilt_2, agcct_tilt_3],
+        dicct345_current=dicct_current,
+        agcct345_current=agcct_current,
+        agcct3_winding_number=agcct3_wn,
+        agcct4_winding_number=agcct4_wn,
+        agcct5_winding_number=agcct5_wn,
+        agcct3_bending_angle=-67.5 * (agcct3_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
+        agcct4_bending_angle=-67.5 * (agcct4_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
+        agcct5_bending_angle=-67.5 * (agcct5_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
+
+        DL1=0.9007765,
+        GAP1=0.4301517,
+        GAP2=0.370816,
+        qs1_length=0.2340128,
+        qs1_aperture_radius=60 * MM,
+        qs1_gradient=0.0,
+        qs1_second_gradient=0.0,
+        qs2_length=0.200139,
+        qs2_aperture_radius=60 * MM,
+        qs2_gradient=0.0,
+        qs2_second_gradient=0.0,
+
+        DL2=2.35011,
+        GAP3=0.43188,
+        qs3_length=0.24379,
+
+        agcct345_inner_small_r=92.5 * MM + 17.1 * MM,# 92.5
+        agcct345_outer_small_r=108.5 * MM + 17.1 * MM,  # 83+15
+        dicct345_inner_small_r=124.5 * MM + 17.1 * MM,  # 83+30+1
+        dicct345_outer_small_r=140.5 * MM + 17.1 * MM,  # 83+45 +2
+    )
+    # f = g.create_first_bending_part_beamline()
+    s = g.create_second_bending_part_beamline()
+    # t = g.create_total_beamline()
+
+
+
+    beamline_phase_ellipse_multi_delta(
+        s,8,[-0.05,0,0.05]
+    )
 
     # Plot2.plot_beamline(t)
     # Plot2.show()

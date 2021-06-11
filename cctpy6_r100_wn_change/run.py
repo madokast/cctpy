@@ -166,9 +166,9 @@ def create_beamline(param, second_bending_part_start_point, second_bending_part_
     dicct_current = param[8]
     agcct_current = param[9]
 
-    agcct3_wn = 25
-    agcct4_wn = 40
-    agcct5_wn = 34
+    agcct3_wn = int(param[10])
+    agcct4_wn = int(param[11])
+    agcct5_wn = int(param[12])
 
     return HUST_SC_GANTRY(
         qs3_gradient=qs3_g,

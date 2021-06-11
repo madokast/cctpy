@@ -205,6 +205,47 @@ class Plot3:
             Plot3.plot_p3s([front_circle[i], back_circle[i]], describe)
 
     @staticmethod
+    def plot_q(q: Q, describe="r-") -> None:
+        """
+        绘制 q
+        """
+        # 前中后三个圈
+        front_circle_local = [
+            P3(
+                q.aperture_radius * math.cos(i / 180 * numpy.pi),
+                q.aperture_radius * math.sin(i / 180 * numpy.pi),
+                0.0,
+            )
+            for i in range(360)
+        ]
+
+        mid_circle_local = [p + P3(0, 0, q.length / 2)
+                            for p in front_circle_local]
+        back_circle_local = [p + P3(0, 0, q.length)
+                             for p in front_circle_local]
+        # 转到全局坐标系中
+        front_circle = [
+            q.local_coordinate_system.point_to_global_coordinate(p)
+            for p in front_circle_local
+        ]
+        mid_circle = [
+            q.local_coordinate_system.point_to_global_coordinate(p)
+            for p in mid_circle_local
+        ]
+        back_circle = [
+            q.local_coordinate_system.point_to_global_coordinate(p)
+            for p in back_circle_local
+        ]
+
+        Plot3.plot_p3s(front_circle, describe)
+        Plot3.plot_p3s(mid_circle, describe)
+        Plot3.plot_p3s(back_circle, describe)
+
+        # 画轴线
+        for i in range(0, 360, 10):
+            Plot3.plot_p3s([front_circle[i], back_circle[i]], describe)
+
+    @staticmethod
     def plot_local_uniform_magnet(local_uniform_magnet: LocalUniformMagnet, describe="r-") -> None:
         """
         绘制 LocalUniformMagnet
@@ -589,6 +630,28 @@ class Plot2:
         Plot2.plot_p2s(outline_2d, describe)
 
     @staticmethod
+    def plot_q(q: Q, describe="r-") -> None:
+        """
+        绘制 qs
+        """
+        length = q.length
+        aper = q.aperture_radius
+        lsc = q.local_coordinate_system
+        origin = lsc.location
+
+        outline = [
+            origin,
+            origin + lsc.XI * aper,
+            origin + lsc.XI * aper + lsc.ZI * length,
+            origin - lsc.XI * aper + lsc.ZI * length,
+            origin - lsc.XI * aper,
+            origin,
+        ]
+
+        outline_2d = [p.to_p2() for p in outline]
+        Plot2.plot_p2s(outline_2d, describe)
+
+    @staticmethod
     def plot_local_uniform_magnet(local_uniform_magnet: LocalUniformMagnet, describe="r-") -> None:
         """
         绘制 LocalUniformMagnet
@@ -629,6 +692,27 @@ class Plot2:
         p1 = start_point + x*length
         p2 = p1 + y*qs.aperture_radius
         p3 = start_point + y*qs.aperture_radius
+        Plot2.plot_p2s([start_point, p1, p2, p3, start_point],
+                       describe=describe)
+
+    @staticmethod
+    def plot_qs_straight(location: float, q: Q, length: float, describe="k-") -> None:
+        """
+        绘制 qs
+        轨道绘制为直线，配合 plot_beamline_straight
+        """
+        start_point = P2(x=location)
+        x = P2.x_direct()
+        y = None
+
+        if q.gradient >= 0:
+            y = P2.y_direct()
+        else:
+            y = -P2.y_direct()
+
+        p1 = start_point + x*length
+        p2 = p1 + y*q.aperture_radius
+        p3 = start_point + y*q.aperture_radius
         Plot2.plot_p2s([start_point, p1, p2, p3, start_point],
                        describe=describe)
 

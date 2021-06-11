@@ -261,7 +261,7 @@ class StraightLine2(Line2):
 
     def __init__(self, length: float, direct: P2, start_point: P2):
         self.length = float(length)
-        self.direct = direct
+        self.direct = direct.normalize()
         self.start_point = start_point
 
     def get_length(self) -> float:

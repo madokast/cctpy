@@ -51,17 +51,19 @@ cct = CCT(
     starting_point_in_ksi_phi_coordinate=P2(0,0),
     end_point_in_ksi_phi_coordinate=P2(2*30*math.pi,30/180*math.pi)
 )
-# 绘制 cct 三维分布
-Plot3.plot_cct(cct)
-Plot3.show()
+# # 绘制 cct 三维分布
+# Plot3.plot_cct(cct)
+# Plot3.show()
 
-# 绘制 ksi_phi_coordinate cct 二维曲线
-Plot2.plot_cct_path2d(cct)
-Plot2.show()
+# # 绘制 ksi_phi_coordinate cct 二维曲线
+# Plot2.plot_cct_path2d(cct)
+# Plot2.show()
 
 # 函数 phi_ksi_function(ksi) 完成 cct ksi->phi 的映射
-print(cct.phi_ksi_function(2*math.pi)) # 0.01745329251994328
-print(1/180*math.pi) # 0.017453292519943295 
+print(cct.phi_ksi_function(2*math.pi)) 
+# 0.01745329251994328
+print(1/180*math.pi) 
+# 0.017453292519943295 
 
 
 # 内部类 BipolarToroidalCoordinateSystem 双极点坐标系
@@ -77,19 +79,22 @@ print(1/180*math.pi) # 0.017453292519943295
 # BipolarToroidalCoordinateSystem.convert(p2)
 # CCT 二维曲线 (ξ,φ) 转为三维 (x,y,z)
 # 注意：三维点 (x,y,z) 处于 CCT 的局部坐标系
-print(cct.bipolar_toroidal_coordinate_system.convert(P2.origin())) # (1.030000000000002, 0.0, 0.0)
+print(cct.bipolar_toroidal_coordinate_system.convert(P2.origin())) 
+# (1.030000000000002, 0.0, 0.0)
 
 # BipolarToroidalCoordinateSystem.main_normal_direction_at(p2)
 # 返回三维 CCT 曲线的法向量，位置由二维点 (ξ,φ) 确定，二维点会在内部转为三维点 (x,y,z)
 # 即返回值 P3 在这点 (x,y,z) 垂直于圆环面
 # 注意：法向量处于 CCT 的局部坐标系
-print(cct.bipolar_toroidal_coordinate_system.main_normal_direction_at(P2.origin())) # (1.0, 0.0, 0.0)
+print(cct.bipolar_toroidal_coordinate_system.main_normal_direction_at(P2.origin())) 
+# (1.0, 0.0, 0.0)
 
 
 # BipolarToroidalCoordinateSystem.__str__()
 # BipolarToroidalCoordinateSystem.__repr__() 完成双极点坐标系到字符串转变
 # 调用 print() 自动执行
-print(cct.bipolar_toroidal_coordinate_system) # BipolarToroidalCoordinateSystem a(0.9995498987044118)eta(4.199480001904374)R(1.0)r(0.03)
+print(cct.bipolar_toroidal_coordinate_system) 
+# BipolarToroidalCoordinateSystem a(0.9995498987044118)eta(4.199480001904374)R(1.0)r(0.03)
 
 
 
@@ -99,7 +104,8 @@ print(cct.bipolar_toroidal_coordinate_system) # BipolarToroidalCoordinateSystem 
 
 
 # 函数 __str__() 和 __repr__() 完成 CCT 到字符串转变
-print(cct) # CCT: local_coordinate_system(LOCATION=(0.0, 0.0, 0.0), xi=(1.0, 0.0, 0.0), yi=(0.0, 1.0, 0.0), zi=(0.0, 0.0, 1.0))big_r(1.0)small_r(0.03)bending_angle(30.0)tilt_angles([30.0])winding_number(30)current(1000.0)starting_point_in_ksi_phi_coordinate((0.0, 0.0))end_point_in_ksi_phi_coordinate((188.49555921538757, 0.5235987755982988))disperse_number_per_winding(120)
+print(cct) 
+# CCT: local_coordinate_system(LOCATION=(0.0, 0.0, 0.0), xi=(1.0, 0.0, 0.0), yi=(0.0, 1.0, 0.0), zi=(0.0, 0.0, 1.0))big_r(1.0)small_r(0.03)bending_angle(30.0)tilt_angles([30.0])winding_number(30)current(1000.0)starting_point_in_ksi_phi_coordinate((0.0, 0.0))end_point_in_ksi_phi_coordinate((188.49555921538757, 0.5235987755982988))disperse_number_per_winding(120)
 
 
 # 类函数 create_cct_along() 创建一个沿着设计轨道的 CCT
@@ -174,19 +180,23 @@ global_path3 = cct.global_path3()
 # conductor_length() 求 CCT 线圈导体长度
 # line_number 表示导线数目
 # disperse_number_per_winding 计算是，一匝线圈分段数目
-print(cct.conductor_length(line_number=1,disperse_number_per_winding=3600)) # 17.443395580963664
-print(cct.conductor_length(line_number=1,disperse_number_per_winding=360)) # 17.442809870531804
+print(cct.conductor_length(line_number=1,disperse_number_per_winding=3600)) 
+# 17.443395580963664
+print(cct.conductor_length(line_number=1,disperse_number_per_winding=360)) 
+# 17.442809870531804
 
 # 类函数 as_cct() 将任意的对象“转为” cct，实际上什么也没做
 # 但是 IDE 就能根据返回值做代码提示
 anything = 123
 anything = CCT.as_cct(anything)
-print(anything) # 123 实际上什么也没做
+print(anything) 
+# 123 实际上什么也没做
 
 # 类函数 calculate_a() 计算极角 a
 # 参数为 big_r 和 small_r
 # 可以看到 a ≈ big_r if big_r>>small_r
-print(CCT.calculate_a(100,1)) # 99.99499987499375
+print(CCT.calculate_a(100,1)) 
+# 99.99499987499375
 
 
 # 类函数 calculate_eta() 计算 η

@@ -556,6 +556,27 @@ class P3:
             p.z for p in p3_list
         ])
 
+    @staticmethod
+    def extract_x(p3_list: List['P3']) -> List[float]:
+        """
+        提取 P3 数组中的 x y z，各自组成数组
+        """
+        return [p.x for p in p3_list]
+
+    @staticmethod
+    def extract_y(p3_list: List['P3']) -> List[float]:
+        """
+        提取 P3 数组中的 x y z，各自组成数组
+        """
+        return [p.y for p in p3_list]
+
+    @staticmethod
+    def extract_z(p3_list: List['P3']) -> List[float]:
+        """
+        提取 P3 数组中的 x y z，各自组成数组
+        """
+        return [p.z for p in p3_list]
+
 
 class ValueWithDistance(Generic[T]):
     """
@@ -577,3 +598,21 @@ class ValueWithDistance(Generic[T]):
         同 __str__()
         """
         return self.__str__()
+
+    @staticmethod
+    def convert_to_p2(
+        data:Union["ValueWithDistance",List["ValueWithDistance"]],
+        convertor:Callable[[T],float]
+    )->Union[P2,List[P2]]:
+        """
+        将 ValueWithDistance 对象转为 P2 对象
+        其中 p2.x = distance
+        """
+        if isinstance(data,ValueWithDistance):
+            return P2(data.distance,convertor(data.value))
+        else:
+            return [
+                P2(each.distance,convertor(each.value))
+                for each in data
+            ]
+

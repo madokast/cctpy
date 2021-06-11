@@ -155,6 +155,72 @@ class Beamline(Line2, Magnet, ApertureObject):
             self.trajectory, s, kinetic_MeV)
         return ParticleRunner.run_get_trajectory(ip, self, length, footstep)
 
+    def track_phase_space_particle(
+        self,
+        x_mm: float,
+        xp_mrad: float,
+        y_mm: float,
+        yp_mrad,
+        delta: float,
+        kinetic_MeV: float,
+        s:float = 0.0,
+        length: Optional[float] = None,
+        footstep: float = 10 * MM,
+    )->List[ValueWithDistance[PhaseSpaceParticle]]:
+        """
+        运行一个相空间粒子 x xp y yp delta
+        s 在束线上的起点
+        length 运动长度，如果为空则运行到束线尾
+        footstep 运动步长
+
+        返回值是一个 List[ValueWithDistance[PhaseSpaceParticle]]
+        即一个数组，数组元素是 ValueWithDistance
+        即对应运动位置的粒子的相空间坐标信息
+        """
+        if length is None:
+            length = self.trajectory.get_length() - s
+        pp = PhaseSpaceParticle(
+            x = x_mm * MM,
+            xp = xp_mrad * MM,
+            y = y_mm * MM,
+            yp= yp_mrad * MM,
+            z = 0.0,
+            delta=delta
+        )
+        # ip, distence = 0.0
+        ip = ParticleFactory.create_proton_along(
+            self.trajectory, s, kinetic_MeV)
+        # to rp, distence = 0.0
+        rp = ParticleFactory.create_from_phase_space_particle(
+            ideal_particle=ip,
+            coordinate_system=ip.get_natural_coordinate_system(),
+            phase_space_particle=pp
+        )
+        # run all info, distence from 0.0
+        all_info = ParticleRunner.run_get_all_info(
+            p = rp,
+            m = self,
+            length=length,
+            footstep=footstep
+        )
+        # for cp
+        ret : List[ValueWithDistance[PhaseSpaceParticle]] = []
+        for cp in all_info:
+            d = cp.distance # , distence from 0.0
+            cip = ParticleFactory.create_proton_along(
+                self.trajectory, d + s, kinetic_MeV) # 所以这里是 d + s
+            cpp = PhaseSpaceParticle.create_from_running_particle(
+                ideal_particle=cip,
+                coordinate_system=cip.get_natural_coordinate_system(),
+                running_particle = cp
+            )
+            ret.append(ValueWithDistance(
+                value=cpp,distance=d
+            ))
+        
+        return ret
+
+
     def track_phase_ellipse(
             self,
             x_sigma_mm: float,
@@ -313,7 +379,7 @@ class Beamline(Line2, Magnet, ApertureObject):
         def __init__(self, start_point: P2) -> None:
             self.start_point = start_point
 
-        def first_drift(self, direct: P2, length: float) -> "Beamline":
+        def first_drift(self, direct: P2 = P2.x_direct(), length: float = 1.0) -> "Beamline":
             """
             为 Beamline 添加第一个 drift
             正如 Trajectory 的第一个曲线段必须是是直线一样
@@ -328,7 +394,8 @@ class Beamline(Line2, Magnet, ApertureObject):
             return bl
 
     @staticmethod
-    def set_start_point(start_point: P2):  # -> "Beamline.__BeamlineBuilder"
+    # -> "Beamline.__BeamlineBuilder"
+    def set_start_point(start_point: P2 = P2.origin()):
         """
         设置束线起点
         """
@@ -400,6 +467,35 @@ class Beamline(Line2, Magnet, ApertureObject):
 
         self.magnets.append(qs)
         self.elements.append((old_length, qs, length))
+
+        return self
+
+    def append_q(
+            self,
+            length: float,
+            gradient: float,
+            aperture_radius: float,
+    ) -> "Beamline":
+        """
+        尾加 Q 磁铁
+
+        length: float QS 磁铁长度
+        gradient: float 梯度 T/m
+        aperture_radius: float 半孔径 单位 m
+        """
+        old_length = self.trajectory.get_length()
+        self.trajectory.add_strait_line(length=length)
+
+        q = Q.create_q_along(
+            trajectory=self.trajectory,
+            s=old_length,
+            length=length,
+            gradient=gradient,
+            aperture_radius=aperture_radius,
+        )
+
+        self.magnets.append(q)
+        self.elements.append((old_length, q, length))
 
         return self
 
