@@ -446,6 +446,17 @@ class StraightLine2(Line2):
 
         return (k, b)
 
+    @staticmethod
+    def create_by(start_point:P2,end_point:P2)->'StraightLine2':
+        """
+        两点创造直线
+        """
+        return StraightLine2(
+            length=(end_point-start_point).length(),
+            direct=(end_point-start_point),
+            start_point=start_point
+        )
+
 
 class ArcLine2(Line2):
     """

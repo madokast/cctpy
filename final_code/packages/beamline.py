@@ -163,15 +163,21 @@ class Beamline(Line2, Magnet, ApertureObject):
         yp_mrad,
         delta: float,
         kinetic_MeV: float,
-        s:float = 0.0,
+        s: float = 0.0,
         length: Optional[float] = None,
         footstep: float = 10 * MM,
-    )->List[ValueWithDistance[PhaseSpaceParticle]]:
+    ) -> List[ValueWithDistance[PhaseSpaceParticle]]:
         """
-        运行一个相空间粒子 x xp y yp delta
-        s 在束线上的起点
+        运行一个相空间粒子
+        x_mm 相空间坐标 x，单位 mm
+        xp_mrad 相空间坐标 xp，单位 mrad
+        y_mm 相空间坐标 y，单位 mm
+        yp_mrad 相空间坐标 yp，单位 mrad
+        delta 动量分散
+        kinetic_MeV 正则动能，单位 MeV
+        s 在束线上的起点，默认 0.0
         length 运动长度，如果为空则运行到束线尾
-        footstep 运动步长
+        footstep 运动步长，默认 10*MM
 
         返回值是一个 List[ValueWithDistance[PhaseSpaceParticle]]
         即一个数组，数组元素是 ValueWithDistance
@@ -180,11 +186,11 @@ class Beamline(Line2, Magnet, ApertureObject):
         if length is None:
             length = self.trajectory.get_length() - s
         pp = PhaseSpaceParticle(
-            x = x_mm * MM,
-            xp = xp_mrad * MM,
-            y = y_mm * MM,
-            yp= yp_mrad * MM,
-            z = 0.0,
+            x=x_mm * MM,
+            xp=xp_mrad * MM,
+            y=y_mm * MM,
+            yp=yp_mrad * MM,
+            z=0.0,
             delta=delta
         )
         # ip, distence = 0.0
@@ -198,28 +204,27 @@ class Beamline(Line2, Magnet, ApertureObject):
         )
         # run all info, distence from 0.0
         all_info = ParticleRunner.run_get_all_info(
-            p = rp,
-            m = self,
+            p=rp,
+            m=self,
             length=length,
             footstep=footstep
         )
         # for cp
-        ret : List[ValueWithDistance[PhaseSpaceParticle]] = []
+        ret: List[ValueWithDistance[PhaseSpaceParticle]] = []
         for cp in all_info:
-            d = cp.distance # , distence from 0.0
+            d = cp.distance  # , distence from 0.0
             cip = ParticleFactory.create_proton_along(
-                self.trajectory, d + s, kinetic_MeV) # 所以这里是 d + s
+                self.trajectory, d + s, kinetic_MeV)  # 所以这里是 d + s
             cpp = PhaseSpaceParticle.create_from_running_particle(
                 ideal_particle=cip,
                 coordinate_system=cip.get_natural_coordinate_system(),
-                running_particle = cp
+                running_particle=cp
             )
             ret.append(ValueWithDistance(
-                value=cpp,distance=d
+                value=cpp, distance=d
             ))
-        
-        return ret
 
+        return ret
 
     def track_phase_ellipse(
             self,
@@ -787,5 +792,11 @@ class Beamline(Line2, Magnet, ApertureObject):
 
         return self
 
+    def get_magnets(self) -> List[Magnet]:
+        return self.magnets
+
     def __str__(self) -> str:
         return f"beamline(magnet_size={len(self.magnets)}, traj_len={self.trajectory.get_length()})"
+
+    def __repr__(self) -> str:
+        return self.__str__()

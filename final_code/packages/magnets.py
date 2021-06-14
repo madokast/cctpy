@@ -817,11 +817,10 @@ class Q(Magnet, ApertureObject):
             z_direction=z_direct.to_p3(),
         )
 
-        return QS(
+        return Q(
             local_coordinate_system=lcs,
             length=length,
             gradient=gradient,
-            second_gradient=0.0,
             aperture_radius=aperture_radius,
         )
 

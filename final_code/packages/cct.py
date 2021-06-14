@@ -608,6 +608,7 @@ class Wire(Magnet):
         s 线圈位置，即要计算磁场的位置
         delta_length 分段长度
         local_coordinate_point 局部坐标系
+        这个局部坐标系仅仅将计算的磁场转为局部坐标系中
 
         返回值 位置点+磁场
         """
@@ -657,11 +658,11 @@ class Wire(Magnet):
         计算线圈上 s 位置处洛伦兹力
         delta_length 线圈分段长度（s位置的这一段线圈不参与计算）
         local_coordinate_point 洛伦兹力坐标系
+        这个局部坐标系仅仅将计算的洛伦兹力转为局部坐标系中
         """
         p, b = self.magnetic_field_on_wire(
             s=s,
             delta_length=delta_length,
-            # 我居然写多了，真厉害
             local_coordinate_point=LocalCoordinateSystem.global_coordinate_system(),
             other_magnet=other_magnet
         )

@@ -6,7 +6,13 @@ HUST 超导机架
 日期：2021年4月24日
 """
 
-from cctpy import *  # 导入模块
+
+from packages.base_utils import BaseUtils
+from packages.point import P2
+from matplotlib import pyplot as plt
+from packages.constants import MM
+from typing import List
+from packages.beamline import Beamline
 
 
 class HUST_SC_GANTRY:
@@ -20,12 +26,12 @@ class HUST_SC_GANTRY:
         # qs 磁铁
         qs1_length=0.2340128,
         qs1_aperture_radius=60 * MM,
-        qs1_gradient=5.67,
-        qs1_second_gradient=-127.78,
+        qs1_gradient=3.1,
+        qs1_second_gradient=7.9,
         qs2_length=0.200139,
         qs2_aperture_radius=60 * MM,
-        qs2_gradient=12.83,
-        qs2_second_gradient=72.22,
+        qs2_gradient=3.8,
+        qs2_second_gradient=-34.5,
         # cct 偏转半径
         cct12_big_r=0.95,
         # cct 孔径
@@ -34,19 +40,19 @@ class HUST_SC_GANTRY:
         dicct12_inner_small_r=104.5 * MM,
         dicct12_outer_small_r=120.5 * MM,
         # cct 匝数1
-        agcct1_winding_number=22,
-        agcct2_winding_number=23,
+        agcct1_winding_number=21,
+        agcct2_winding_number=21,
         dicct12_winding_number=42,
         # cct 角度
         dicct12_bending_angle=22.5,
-        agcct1_bending_angle=11,
-        agcct2_bending_angle=11.5,
+        agcct1_bending_angle=22.5/2,
+        agcct2_bending_angle=22.5/2,
         # cct 倾斜角（倾角 90 度表示不倾斜）
-        dicct12_tilt_angles=[30, 80],
-        agcct12_tilt_angles=[90, 30],
+        dicct12_tilt_angles=[30, 102.8,95.6,87.3],
+        agcct12_tilt_angles=[93.5, 30, 78.3, 97.5],
         # cct 电流
-        dicct12_current=-6192,
-        agcct12_current=-3319,
+        dicct12_current=-9780.7,
+        agcct12_current= 9736.8,
         # ------------------ 后偏转段 ---------------#
         # 漂移段
         DL2=2.1162209,
@@ -336,7 +342,7 @@ class HUST_SC_GANTRY:
                     disperse_number_per_winding=self.part_per_winding
                 )
                 .append_drift(self.DL1)
-                
+
                 # 第二段
                 .append_drift(self.DL2)
                 .append_agcct(
@@ -375,13 +381,18 @@ class HUST_SC_GANTRY:
                 )
                 .append_drift(self.DL2)
             )
-        
+
         return self.__total_beamline
 
 
-def beamline_phase_ellipse_multi_delta(bl: Beamline, particle_number: int,
-                                       dps: List[float], describles: str = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-'],
-                                       foot_step: float = 20*MM, report: bool = True):
+def beamline_phase_ellipse_multi_delta(
+    bl: Beamline,
+    particle_number: int = 8,
+    dps: List[float] = [-0.05, 0, 0.05],
+    describles: str = ['r-', 'y-', 'b-', 'k-', 'g-', 'c-', 'm-'],
+    foot_step: float = 20*MM,
+    report: bool = True
+):
     if len(dps) > len(describles):
         print(
             f'describles(size={len(describles)}) 长度应大于等于 dps(size={len(dps)})')
@@ -425,7 +436,8 @@ if __name__ == "__main__":
     BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
     # param = [4.994543592,	40.04650003	,85.82762698,	96.91909089	,95.33845506,	97.55636171	,60.01158632,	83.74210641,	9244.758463,	-7241.295297]
 
-    param = [4.373233845,	40	,85.34567767,	97.46179759,	95.92615864,	97.49058727,	60.08368362,	83.65814899,	9243.737555,	-7364.730324]
+    param = [4.373233845,	40	, 85.34567767,	97.46179759,	95.92615864,
+             97.49058727,	60.08368362,	83.65814899,	9243.737555,	-7364.730324]
 
     qs3_g = param[0]
     qs3_sg = param[1]
@@ -455,9 +467,12 @@ if __name__ == "__main__":
         agcct3_winding_number=agcct3_wn,
         agcct4_winding_number=agcct4_wn,
         agcct5_winding_number=agcct5_wn,
-        agcct3_bending_angle=-67.5 * (agcct3_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
-        agcct4_bending_angle=-67.5 * (agcct4_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
-        agcct5_bending_angle=-67.5 * (agcct5_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
+        agcct3_bending_angle=-67.5 *
+        (agcct3_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
+        agcct4_bending_angle=-67.5 *
+        (agcct4_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
+        agcct5_bending_angle=-67.5 *
+        (agcct5_wn / (agcct3_wn + agcct4_wn + agcct5_wn)),
 
         DL1=0.9007765,
         GAP1=0.4301517,
@@ -475,7 +490,7 @@ if __name__ == "__main__":
         GAP3=0.43188,
         qs3_length=0.24379,
 
-        agcct345_inner_small_r=92.5 * MM + 17.1 * MM,# 92.5
+        agcct345_inner_small_r=92.5 * MM + 17.1 * MM,  # 92.5
         agcct345_outer_small_r=108.5 * MM + 17.1 * MM,  # 83+15
         dicct345_inner_small_r=124.5 * MM + 17.1 * MM,  # 83+30+1
         dicct345_outer_small_r=140.5 * MM + 17.1 * MM,  # 83+45 +2
@@ -484,10 +499,8 @@ if __name__ == "__main__":
     s = g.create_second_bending_part_beamline()
     # t = g.create_total_beamline()
 
-
-
     beamline_phase_ellipse_multi_delta(
-        s,8,[-0.05,0,0.05]
+        s, 8, [-0.05, 0, 0.05]
     )
 
     # Plot2.plot_beamline(t)

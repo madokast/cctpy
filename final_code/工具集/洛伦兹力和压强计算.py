@@ -20,34 +20,33 @@ from cctpy import *
 R = 0.95
 
 bl = (
-    Beamline.set_start_point(start_point=P2(R, -1))
-    .first_drift(P2.y_direct(), 1)
+    Beamline.set_start_point()
+    .first_drift()
     .append_agcct(
-        big_r=R,
-        small_rs=[140.5*MM, 124.5*MM, 108.5*MM, 92.5*MM],
-        bending_angles=[17.05, 27.27, 23.18],  # [15.14, 29.02, 23.34]
-        tilt_angles=[[30, 88.8, 98.1, 91.7],
-                     [101.8, 30, 62.7, 89.7]],
-        winding_numbers=[[128], [25, 40, 34]],
-        currents=[9409.261, -7107.359],
-        disperse_number_per_winding=36
-    ).append_drift(1)
+        big_r=0.95,  # 偏转半径
+        small_rs=[130*MM, 114*MM, 98*MM, 83*MM],  # 从大到小的绕线半径
+        # 四极交变 CCT 的偏转角度，无需给出二极 CCT 的偏转角度，因为就是这三个数的和
+        bending_angles=[17.05, 27.27, 23.18],
+        tilt_angles=[
+            [30, 88.773, 98.139, 91.748],  # 二极 CCT 倾斜角，即 ak 的值，任意长度数组
+            [101.792, 30, 62.677, 89.705]  # 四极 CCT 倾斜角，即 ak 的值，任意长度数组
+        ],
+        winding_numbers=[
+            [128],  # 二极 CCT 匝数
+            [25, 40, 34]  # 四极 CCT 匝数
+        ],
+        currents=[9409.261, -7107.359]  # 二极 CCT 和四极 CCT 电流
+    )
 )
 
 # 提取 CCT
-dicct_out = CCT.as_cct(bl.magnets[0])  # [0.0, 0.0] [-804.247719318987, 1.1955505376161157]
-dicct_in = CCT.as_cct(bl.magnets[1])  # [0.0, 0.0] [804.247719318987, 1.1955505376161157])
-# [0.0, 0.0] [125.66370614359172, 0.23362977367196094]
+dicct_out = CCT.as_cct(bl.magnets[0])
+dicct_in = CCT.as_cct(bl.magnets[1])
 agcct3_in = CCT.as_cct(bl.magnets[2])
-# [0.0, 0.0] [-125.66370614359172, 0.23362977367196094]
 agcct3_out = CCT.as_cct(bl.magnets[3])
-# [125.66370614359172, 0.245311262355559] [-150.79644737231004, 0.7225540930208885]
 agcct4_in = CCT.as_cct(bl.magnets[4])
-# [-125.66370614359172, 0.245311262355559] [150.79644737231004, 0.7225540930208885]
 agcct4_out = CCT.as_cct(bl.magnets[5])
-# [-150.79644737231004, 0.7334005209905551] [125.66370614359172, 1.2180784542693803]
 agcct5_in = CCT.as_cct(bl.magnets[6])
-# [150.79644737231004, 0.7334005209905551] [-125.66370614359172, 1.2180784542693803]
 agcct5_out = CCT.as_cct(bl.magnets[7])
 
 # 转为 wire
@@ -62,7 +61,7 @@ wagcct5_out = Wire.create_by_cct(agcct5_out)
 
 # 当前进行分析的 CCT
 if True:
-    if False:
+    if True:
         delta_angle = 10  # 当 CCT 负 ksi 方向绕线时，写负数
         s_start = 0+delta_angle/2  # 起止 ksi
         s_end = 360*128-delta_angle/2
@@ -82,7 +81,7 @@ if True:
         file_name = f'./二极CCT外层{"固定" if 固定坐标系 else "滑动"}坐标系-{"洛伦兹力" if 洛伦兹力 else "压强"}.txt'
     if False:
         delta_angle = 10  # 当 CCT 负 ksi 方向绕线时，写负数
-        s_start = 0+delta_angle/2  # 起止 ksi
+        s_start = 0+delta_angle/2  # 起止 ksi，从 0 开始，是因为原本值为 2pi 的整数倍，所以可以直接从 0 开始
         s_end = 360*25-delta_angle/2
         s_number = 36*25  # 数目
         current_cct = agcct3_in  # 当前 CCT 和 wire
@@ -125,7 +124,7 @@ if True:
         固定坐标系 = False
         洛伦兹力 = False  # else 压强
         file_name = f'./四极CCT第3段内层{"固定" if 固定坐标系 else "滑动"}坐标系-{"洛伦兹力" if 洛伦兹力 else "压强"}.txt'
-    if True:
+    if False:
         delta_angle = -10  # 当 CCT 负 ksi 方向绕线时，写负数
         s_start = 0+delta_angle/2 - 25*360 + 40*360  # 起止 ksi
         s_end = -360*34-delta_angle/2-25*360 + 40*360
@@ -134,14 +133,6 @@ if True:
         固定坐标系 = False
         洛伦兹力 = True  # else 压强
         file_name = f'./四极CCT第3段外层{"固定" if 固定坐标系 else "滑动"}坐标系-{"洛伦兹力" if 洛伦兹力 else "压强"}.txt'
-    # if False:
-    #     delta_angle = -10  # 当 CCT 负 ksi 方向绕线时，写负数
-    #     s_start = 0+delta_angle/2 - 25*360+40*360  # 起止 ksi
-    #     s_end = -360*34-delta_angle/2-25*360+40*360
-    #     s_number = 36*34  # 数目
-    #     current_cct = agcct5_out  # 当前 CCT 和 wire
-    #     固定坐标系 = False
-    #     file_name = f'./四极CCT第3段外层{"固定" if 固定坐标系 else "滑动"}坐标系-压强.txt'
 
 current_wire = Wire.create_by_cct(current_cct)
 other_magnet = CombinedMagnet(*bl.magnets)

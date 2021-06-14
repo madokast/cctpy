@@ -253,8 +253,10 @@ class Plot3:
         # 前中后三个圈
         front_circle_local = [
             P3(
-                local_uniform_magnet.aperture_radius * math.cos(i / 180 * numpy.pi),
-                local_uniform_magnet.aperture_radius * math.sin(i / 180 * numpy.pi),
+                local_uniform_magnet.aperture_radius *
+                math.cos(i / 180 * numpy.pi),
+                local_uniform_magnet.aperture_radius *
+                math.sin(i / 180 * numpy.pi),
                 0.0,
             )
             for i in range(360)
@@ -266,15 +268,18 @@ class Plot3:
                              for p in front_circle_local]
         # 转到全局坐标系中
         front_circle = [
-            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(p)
+            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(
+                p)
             for p in front_circle_local
         ]
         mid_circle = [
-            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(p)
+            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(
+                p)
             for p in mid_circle_local
         ]
         back_circle = [
-            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(p)
+            local_uniform_magnet.local_coordinate_system.point_to_global_coordinate(
+                p)
             for p in back_circle_local
         ]
 
@@ -309,20 +314,18 @@ class Plot3:
                            axis_lengths[2]], describe=describe)
 
     @staticmethod
-    def plot_running_particle(p:RunningParticle, describe="r.")->None:
+    def plot_running_particle(p: RunningParticle, describe="r.") -> None:
         """
         绘制单个粒子，实际上绘制粒子的位置
         """
-        Plot3.plot_p3(p.position,describe=describe)
-
+        Plot3.plot_p3(p.position, describe=describe)
 
     @staticmethod
-    def plot_running_particles(ps:List[RunningParticle], describe="r.")->None:
+    def plot_running_particles(ps: List[RunningParticle], describe="r.") -> None:
         """
         绘制多个粒子，实际上绘制粒子的位置
         """
-        Plot3.plot_p3s([p.position for p in ps],describe=describe)    
-
+        Plot3.plot_p3s([p.position for p in ps], describe=describe)
 
     @staticmethod
     def set_center(center: P3 = P3.origin(), cube_size: float = 1.0) -> None:
@@ -470,8 +473,6 @@ class Plot2:
         else:
             plt.plot(x, y, describe)
 
-        
-
     @staticmethod
     def plot_xy_array(xs: List[float], ys: List[float], describe="r-") -> None:
         """
@@ -481,11 +482,28 @@ class Plot2:
         """
         if not Plot2.INIT:
             Plot2.__init()
-            
+
         if describe is None:
             plt.plot(xs, ys)
         else:
             plt.plot(xs, ys, describe)
+
+    @staticmethod
+    def plot_function(
+        func: Callable[[float], float], start: float, end: float,
+        number: int = 1000, describe="r-"
+    ) -> None:
+        """
+        绘制函数
+        func 函数
+        start 自变量起点
+        end 自变量终点
+        number 点数
+        describe 绘图控制信息
+        """
+        xs = BaseUtils.linspace(start, end, number)
+        ys = [func(x) for x in xs]
+        Plot2.plot_xy_array(xs, ys, describe=describe)
 
     @staticmethod
     def plot_p2(p: P2, describe="r") -> None:
@@ -505,7 +523,7 @@ class Plot2:
         Plot2.plot_p2(p3_to_p2(p), describe)
 
     @staticmethod
-    def plot_p2s(ps: List[P2], describe="r-",circle:bool=False) -> None:
+    def plot_p2s(ps: List[P2], describe="r-", circle: bool = False) -> None:
         """
         绘制点 P2 数组，多个点
         circle 是否画一个封闭的圆
@@ -515,7 +533,7 @@ class Plot2:
 
     @staticmethod
     def plot_p3s(
-            ps: List[P3], p3_to_p2: Callable[[P3],P2] = lambda p3: P2(p3.x, p3.y), describe="r-"
+            ps: List[P3], p3_to_p2: Callable[[P3], P2] = lambda p3: P2(p3.x, p3.y), describe="r-"
     ) -> None:
         """
         绘制点 P3 数组，多个点
@@ -670,7 +688,6 @@ class Plot2:
             origin,
         ]
 
-
         outline_2d = [p.to_p2() for p in outline]
         Plot2.plot_p2s(outline_2d, describe)
 
@@ -782,7 +799,8 @@ class Plot2:
                 elif isinstance(b, CCT):
                     Plot2.plot_cct_outline_straight(loc, b, length, describe=d)
                 elif isinstance(b, LocalUniformMagnet):
-                    Plot2.plot_local_uniform_magnet_straight(loc, b, length, describe=d)
+                    Plot2.plot_local_uniform_magnet_straight(
+                        loc, b, length, describe=d)
                 else:
                     print(f"无法绘制{b}")
         Plot2.plot_p2s(
@@ -883,7 +901,7 @@ class Plot2:
             title: str = "",
             font_size: int = 24,
             font_family: str = "Times New Roman",
-    ) -> NoReturn:
+    ):
         """
         设置文字标记
         """
@@ -903,7 +921,7 @@ class Plot2:
         plt.yticks(fontproperties=font_family, size=font_size)
 
     @staticmethod
-    def legend(*labels: Tuple, font_size: int = 24, font_family: str = "Times New Roman") -> NoReturn:
+    def legend(*labels: Tuple, font_size: int = 24, font_family: str = "Times New Roman"):
         """
         设置图例
         since v0.1.1
@@ -928,4 +946,3 @@ class Plot2:
             print("Plot2::请在show前调用plot")
 
         plt.show()
-

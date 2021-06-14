@@ -31,5 +31,12 @@ from cctpy import *
 # -- 虚线，即多个数据点绘制时，按顺序用虚线连接
 
 # 下面绘制点 (2,3)，可以看到默认情况下 describe="r."，即红色点
-Plot2.plot_xy(2,3)
+# Plot2.plot_xy(2,3)
+# Plot2.show()
+
+# 绘制余切函数
+x = BaseUtils.linspace(0,math.pi,180)[1:179]
+y = 1/numpy.tan(x)
+Plot2.plot_xy_array(x,y)
+Plot2.ylim(-10,10)
 Plot2.show()

@@ -8,9 +8,12 @@ OPERA 扩展，主要包括两个功能：
 作者：赵润晓
 日期：2021年6月3日
 """
+from typing import List
+from packages.point import P3
+from packages.magnets import Magnet
+from packages.cct import CCT
+from packages.constants import M
 
-from cctpy import *
-from hust_sc_gantry import *
 
 # OPERA 导体文件头
 OPERA_CONDUCTOR_SCRIPT_HEAD: str = "CONDUCTOR\n"
@@ -245,6 +248,12 @@ class Brick8s:
             label=label
         )
 
+    def get_brick8_number(self) -> int:
+        """
+        返回 brick8 导体数目
+        """
+        return len(self.line1)-1
+
 
 class OperaConductorScript:
     """
@@ -259,6 +268,20 @@ class OperaConductorScript:
         ret.append(OPERA_CONDUCTOR_SCRIPT_TAIL)
 
         return '\n'.join(ret)
+
+    @staticmethod
+    def to_opera_cond_file(brick8s_list: List[Brick8s], file_name="cond.cond") -> None:
+        num = 0
+        for b in brick8s_list:
+            num += b.get_brick8_number()
+
+        print(f"共检测到 {num} 个 Brick8 导体，开始导出...")
+
+        f = open(file_name, "w")
+        f.write(OperaConductorScript.to_opera_cond_script(brick8s_list))
+        f.close()
+
+        print(f"opera 导体文件 {file_name} 导出成功")
 
 
 class FieldWIthPosion:
@@ -732,81 +755,3 @@ class OperaFieldTableMagnet(Magnet):
             return FieldWIthPosion(position=new_position, field=field_position_in_table.field)
 
         return self.index_to_field_position(moved_index)
-
-
-if __name__ == "__main__":
-    if False:  # 导出 cond 文件
-        # 2020 年参数
-        # data = [-8.085,73.808,80.988,94.383,91.650,106.654,67.901,90.941,9488.615,-7334.914,24,46,37]
-
-        # 2021.1.1 参数
-        # data = [4.378,-90.491,87.076,91.829,85.857,101.317,75.725,92.044,9536.310,-6259.974,25,40,34]
-
-        data = [4.675,	41.126 	, 88.773,	98.139,
-                91.748 	, 101.792,	62.677,	89.705,
-                9409.261,	-7107.359, 25, 40, 34]
-
-        gantry = HUST_SC_GANTRY(
-            qs3_gradient=data[0],
-            qs3_second_gradient=data[1],
-            dicct345_tilt_angles=[30, data[2], data[3], data[4]],
-            agcct345_tilt_angles=[data[5], 30, data[6], data[7]],
-            dicct345_current=data[8],
-            agcct345_current=data[9],
-            agcct3_winding_number=data[10],
-            agcct4_winding_number=data[11],
-            agcct5_winding_number=data[12],
-            agcct3_bending_angle=-67.5*(data[10])/(data[10]+data[11]+data[12]),
-            agcct4_bending_angle=-67.5*(data[11])/(data[10]+data[11]+data[12]),
-            agcct5_bending_angle=-67.5*(data[12])/(data[10]+data[11]+data[12]),
-
-
-            DL1=0.9007765,
-            GAP1=0.4301517,
-            GAP2=0.370816,
-            qs1_length=0.2340128,
-            qs1_aperture_radius=60 * MM,
-            qs1_gradient=0.0,
-            qs1_second_gradient=0.0,
-            qs2_length=0.200139,
-            qs2_aperture_radius=60 * MM,
-            qs2_gradient=0.0,
-            qs2_second_gradient=0.0,
-
-            DL2=2.35011,
-            GAP3=0.43188,
-            qs3_length=0.24379,
-
-            agcct345_inner_small_r=92.5 * MM,
-            agcct345_outer_small_r=108.5 * MM,
-            dicct345_inner_small_r=124.5 * MM,
-            dicct345_outer_small_r=140.5 * MM,
-        )
-
-        bl_all = gantry.create_beamline()
-
-        f = gantry.first_bending_part_length()
-
-        sp = bl_all.trajectory.point_at(f)
-        sd = bl_all.trajectory.direct_at(f)
-
-        bl = gantry.create_second_bending_part(sp, sd)
-
-        diccts = bl.magnets[0:2]
-        agccts = bl.magnets[2:8]
-
-        # m = Magnets(*ccts)
-
-        # bz = m.magnetic_field_bz_along(bl.trajectory,step=10*MM)
-
-        # Plot2.plot(bz)
-        # Plot2.show()
-
-        b8s_list = [Brick8s.create_by_cct(
-            c, 3.2*MM, 11*MM, 'dicct', 10) for c in diccts]
-        b8s_list.extend([Brick8s.create_by_cct(
-            c, 3.2*MM, 11*MM, 'agcct', 10) for c in agccts])
-
-        operafile = open("opera021.cond", "w")
-        operafile.write(OperaConductor.to_opera_cond_script(b8s_list))
-        operafile.close()

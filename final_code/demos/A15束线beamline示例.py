@@ -13,14 +13,164 @@ sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
 
 from cctpy import *
 
+
+
+
 # Beamline 表示一段竖线，它由 Line2 和 多个 Magnet 组成
 # 因此它可以看作一条二维有向曲线段，也可以看作一个磁铁
 
-# 下面以一个超导机架为例，介绍 Beamline 的使用
 
 if __name__ == "__main__":
     BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
 
+
+    # 构造器
+    traj = (
+        Trajectory.set_start_point(P2(1,1))
+        .first_line(direct=P2.y_direct(),length=1)
+        .add_arc_line(radius=0.05,clockwise=True,angle_deg=90)
+        .add_strait_line(1)
+        .add_arc_line(radius=0.05,clockwise=True,angle_deg=90)
+        .add_strait_line(1)
+        .add_arc_line(radius=0.05,clockwise=True,angle_deg=90)
+        .add_strait_line(0.5)
+    )
+    bl = Beamline(traj)
+    # Plot2.plot_beamline(bl)
+    # Plot2.equal()
+    # Plot2.show()
+
+    print(bl.magnetic_field_at(P3.random()))
+    # (0.0, 0.0, 0.0)
+
+    print(bl.is_out_of_aperture(P3.random()))
+    # False
+
+    print(bl.get_length()) # 3.7356194490192345
+    print(bl.point_at(0)) # (1.0, 1.0)
+    print(bl.point_at(1)) # (1.0, 2.0)
+    print(bl.direct_at(0)) # (0.0, 1.0)
+    print(bl.direct_at(1)) # (0.0, 1.0)
+
+    bl = Beamline.set_start_point(P2(1,2)).first_drift(direct=P2(1,1),length=1)
+    # Plot2.plot_beamline(bl)
+    # Plot2.equal()
+    # Plot2.info()
+    # Plot2.show()
+
+    bl.append_q(
+        length=0.27,
+        gradient=0.5,
+        aperture_radius=100*MM
+    )
+    bl.append_drift(1.0)
+    # Plot2.plot_beamline(bl)
+    # Plot2.equal() # 坐标轴 xy 比例相同
+    # Plot2.info() # 字体大小变为24
+    # Plot2.show()
+
+    bl.append_qs(
+        length=0.5,
+        gradient=0.5,
+        second_gradient=0.0,
+        aperture_radius=50*MM
+    )
+    bl.append_drift(2.0)
+    # Plot2.plot_beamline(bl)
+    # Plot2.equal() # 坐标轴 xy 比例相同
+    # Plot2.info() # 字体大小变为24
+    # Plot2.show()
+
+    bl.append_dipole_cct(
+        big_r=1.0,
+        small_r_inner=100*MM,
+        small_r_outer=150*MM,
+        bending_angle=-45,
+        tilt_angles=[30],
+        winding_number=45,
+        current=10000
+    )
+    bl.append_drift(2.0)
+    # Plot2.plot_beamline(bl)
+    # Plot2.equal() # 坐标轴 xy 比例相同
+    # Plot2.info() # 字体大小变为24
+    # Plot2.show()
+
+    bl.append_agcct(
+        big_r=3.0,
+        small_rs=[200*MM,180*MM,160*MM,140*MM],
+        bending_angles=[60,60,60],
+        tilt_angles=[
+            [30,80,90,80],
+            [80,30,95,105,90,100]
+        ],
+        winding_numbers=[
+            [120],
+            [30,30,30]
+        ],
+        currents=[8000,-10000]
+    )
+    bl.append_drift(3.0)
+    # Plot2.plot_beamline(bl)
+    # Plot2.equal() # 坐标轴 xy 比例相同
+    # Plot2.info() # 字体大小变为24
+    # Plot2.show()
+
+    magnets = bl.get_magnets()
+    for magnet in magnets:
+        print(magnet)
+    # Q:local_coordinate_system=LOCATION=(1.7071067811865475, 2.7071067811865475, 0.0), xi=(-0.7071067811865476, 0.7071067811865476, 0.0), yi=(0.0, -0.0, 1.0000000000000002), zi=(0.7071067811865476, 0.7071067811865476, 0.0), length=0.27, gradient=0.5, aperture_radius=0.1
+    # QS:local_coordinate_system=LOCATION=(2.605132393293463, 3.605132393293463, 0.0), xi=(-0.7071067811865476, 0.7071067811865476, 0.0), yi=(0.0, -0.0, 1.0000000000000002), zi=(0.7071067811865476, 0.7071067811865476, 0.0), length=0.5, gradient=0.5, second_gradient=0.0, aperture_radius=0.05
+    # CCT: local_coordinate_system(LOCATION=(5.0800061274463895, 4.6657925650732235, 0.0), xi=(-0.7071067811865476, 0.7071067811865476, 0.0), yi=(-0.7071067811865476, -0.7071067811865476, 0.0), zi=(0.0, 0.0, 1.0))big_r(1.0)small_r(0.1)bending_angle(45.0)tilt_angles([30.0])winding_number(45)current(10000.0)starting_point_in_ksi_phi_coordinate((0.0, 0.0))end_point_in_ksi_phi_coordinate((282.7433388230814, -0.7853981633974483))disperse_number_per_winding(120)
+
+
+    bl = HUST_SC_GANTRY().create_first_bending_part_beamline()
+    # track = bl.track_ideal_particle(
+    #     kinetic_MeV=215,
+    #     s = 0,
+    #     footstep=20*MM
+    # )
+    # Plot3.plot_beamline(bl)
+    # Plot3.plot_p3s(track,describe='k-')
+    # Plot3.set_center(center=bl.point_at_middle().to_p3(),cube_size=8)
+    # Plot3.show()
+
+    phase_space_particle_with_distance = bl.track_phase_space_particle(
+        x_mm=3.5,xp_mrad=0.0,
+        y_mm=0,yp_mrad=0,
+        delta=0,kinetic_MeV=215,
+        s=0,footstep=20*MM
+    )
+    # track_in_x_plane = [
+    #     P2(pd.distance,pd.value.x)
+    #     for pd in phase_space_particle_with_distance
+    # ]
+    # Plot2.plot_p2s(track_in_x_plane)
+    # Plot2.plot_beamline_straight(bl)
+    # Plot2.show()
+
+    # sx, sy = bl.track_phase_ellipse(
+    #     x_sigma_mm=3.5,
+    #     xp_sigma_mrad=7.5,
+    #     y_sigma_mm=3.5,
+    #     yp_sigma_mrad=7.5,
+    #     delta=0.01,
+    #     particle_number=8,
+    #     kinetic_MeV=215,
+    #     concurrency_level=16
+    # )
+    # Plot2.plot_p2s(sx,circle=True,describe='r-')
+    # Plot2.plot_p2s(sy,circle=True,describe='k-')
+    # Plot2.equal()
+    # Plot2.info("mm","mrad")
+    # Plot2.legend("x_plane","y_plane")
+    # Plot2.show()
+
+    print(bl)
+    print(bl.__str__())
+    print(bl.__repr__())
+
+    # 下面以一个超导机架为例，介绍 Beamline 的使用
     #------------------ 前偏转段 ---------------#
     # 漂移段，包含 DL1 GAP1 GAP2
     DL1 = 0.8001322

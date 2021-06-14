@@ -6,7 +6,14 @@ COSY 扩展代码
 日期：2021年6月3日
 """
 
-from cctpy import *
+from packages.line3s import Line3
+from packages.base_utils import BaseUtils
+from packages.point import ValueWithDistance
+from packages.constants import M, MM
+from packages.line2s import Line2
+from packages.magnets import Magnet
+from typing import List, Optional, Union
+from packages.particles import PhaseSpaceParticle
 
 
 class CosyMap:

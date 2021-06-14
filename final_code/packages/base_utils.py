@@ -8,7 +8,7 @@ CCT 建模优化代码
 
 import multiprocessing  # since v0.1.1 多线程计算
 import time  # since v0.1.1 统计计算时长
-from typing import Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Tuple, TypeVar, Union
 import matplotlib.pyplot as plt
 import math
 import random  # since v0.1.1 随机数
@@ -42,7 +42,7 @@ class BaseUtils:
         判断 a b 是否相等，相等返回 true
         当 a b 不相等时，若 msg 为空，返回 flase，否则抛出异常，异常信息即 msg
 
-        示例：
+        因此这个函数不仅可以用来判断相等，还可以作为 assert
         """
         if (isinstance(a, float) or isinstance(a, int)) and (
                 isinstance(b, float) or isinstance(b, int)
@@ -154,12 +154,32 @@ class BaseUtils:
     def polynomial_fitting(xs: List[float], ys: List[float], order: int) -> List[float]:
         """
         多项式拟合
-        xs 自变量，ys 变量，拟合阶数为 order，返回一个数组
+        xs 自变量数组
+        ys 因变量数组
+        order 拟合阶数
+
+        返回一个数组
         数组第 0 项为拟合常数项
         数组第 i 项为拟合 i 次项
         """
         fit = numpy.polyfit(xs, ys, order)
         return fit[::-1].tolist()
+
+    @staticmethod
+    def polynomial_fitted_function(coefficient_list: List[float]) -> Callable[[float], float]:
+        """
+        将多项式拟合结果：系数数组 coefficient_list
+        转为
+        """
+        def f(x: float) -> float:
+            # 常数项
+            y = coefficient_list[0]
+            for i in range(1, len(coefficient_list)):
+                coefficient = coefficient_list[i]
+                y += coefficient * (x ** i)
+            return y
+
+        return f
 
     @staticmethod
     def list_multiply(
@@ -221,7 +241,7 @@ class BaseUtils:
     @staticmethod
     def is_sorted(li: List) -> bool:
         """
-        判断数组是否有序
+        判断数组是否有序（从大到小排列）
         这个方法来自 https://www.zhihu.com/question/368573897
         虽然无法快速退出，但很简洁
         """
@@ -241,10 +261,24 @@ class BaseUtils:
             f = f.f_back
 
     @staticmethod
-    def runge_kutta4(t0: float, t_end: float, Y0: T, y_derived_function: Callable[[float, T], T], dt: float,
-                     record: bool = False) -> Union[T, Tuple[List[float], List[T]]]:
+    def runge_kutta4(
+        t0: float,
+        t_end: float,
+        Y0: T,
+        y_derived_function: Callable[[float, T], T],
+        dt: float,
+        record: bool = False
+    ) -> Union[T, Tuple[List[float], List[T]]]:
         """
         4 阶 runge kutta 法求解微分方程组
+        t0 自变量起始值
+        t_end 自变量终值
+        Y0 方程在 t0 处的值
+        y_derived_function 函数 Y' = f(x,Y)
+        dt 计算步长
+        record 是否返回每一步的结果
+            如若是，返回 自变量 t 数组和 Y 数组
+            否，则返回 t_end 处 Y(t) 值
         since v0.1.1
         """
         number: int = math.ceil((t_end - t0) / dt)
@@ -277,9 +311,16 @@ class BaseUtils:
             return Y0
 
     @staticmethod
-    def solve_ode(t0: float, t_end: float, Y0: T, y_derived_function: Callable[[float, T], T], dt: float,
-                  record: bool = False, absolute_tolerance: float = 1e-8, relative_tolerance: float = 1e-8) -> Union[
-            T, Tuple[List[float], List[T]]]:
+    def solve_ode(
+        t0: float,
+        t_end: float,
+        Y0: T,
+        y_derived_function: Callable[[float, T], T],
+        dt: float,
+        record: bool = False,
+        absolute_tolerance: float = 1e-8,
+        relative_tolerance: float = 1e-8
+    ) -> Union[T, Tuple[List[float], List[T]]]:
         """
         scipy 中 ode45
         即变步长 4 阶 runge kutta 法
@@ -293,11 +334,14 @@ class BaseUtils:
             #               t0, t_end], Y0, t_eval=t_eval, rtol=1e-8, atol=1e-8, first_step=dt, max_step=dt)
         else:
             s = solve_ivp(y_derived_function, [
-                t0, t_end], Y0, rtol=1e-8, atol=1e-8, first_step=dt, max_step=dt)
-            return s.y
+                t0, t_end], [Y0], rtol=relative_tolerance, atol=absolute_tolerance, first_step=dt, max_step=dt)
+            return s.y[0][-1]
 
     # 多进程安全提示 since v0.1.1
     __I_AM_SURE_MY_CODE_CLOSED_IN_IF_NAME_EQUAL_MAIN: bool = False
+
+    # 子线程名字，用于判断当前进程是不是子进程
+    # _CHILD_PROCESS_NAME:str = 'CCTPY_CHILD_PROCESS'
 
     @classmethod
     def i_am_sure_my_code_closed_in_if_name_equal_main(cls):
@@ -307,12 +351,20 @@ class BaseUtils:
         """
         cls.__I_AM_SURE_MY_CODE_CLOSED_IN_IF_NAME_EQUAL_MAIN = True
 
+    # @staticmethod
+    # def _set_current_process_name(name:str)->None:
+    #     """
+    #     设置当前进程名字
+    #     """
+    #     multiprocessing.current_process().name = name
+
     @classmethod
     def submit_process_task(cls,
                             task: Callable[..., T],
                             param_list: List[List],
                             concurrency_level: Optional[int] = None,
-                            report: bool = True
+                            report: bool = True,
+                            i_want_to_create_process_pool_in_child_process:bool = False
                             ) -> List[T]:
         """
         提交任务多进程并行
@@ -320,6 +372,7 @@ class BaseUtils:
         T 任务返回值
         param_list 任务参数数组，数组每个元素表示一个 task 的输出组合
         concurrency_level 并发等级，默认为 CPU 核心数
+        report 是否报告耗时
 
 
         因为 python 具有全局解释器锁，所以 CPU 密集任务无法使用线程加速，只能使用进程
@@ -327,30 +380,57 @@ class BaseUtils:
 
         since v0.1.1
         """
-        if not cls.__I_AM_SURE_MY_CODE_CLOSED_IN_IF_NAME_EQUAL_MAIN:
-            # 删除激进的报错方式
-            # raise PermissionError(
-            #     "在使用CPU并行计算前，应确保你的脚本写在if __name__ == '__main__':"
-            #     + "代码块内部，并显式调用BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()函数"
-            # )
-            print("警告：")
-            print("当前你正在进行 CPU 并行计算。如果你的脚本没有被")
-            print("if __name__ == '__main__':")
-            print("包裹起来，可能会发生意外。")
-            print("如果出现意外情况，请加上 if __name__ == '__main__': ")
+        # 确定当前进程池是否由主进程创建
+        current_pool_is_create_by_main_process = False
+        cpn = multiprocessing.current_process().name.upper()
+        if cpn.find("POOL") == -1 :
+            current_pool_is_create_by_main_process = True
+        else:
+            if not i_want_to_create_process_pool_in_child_process:
+                print("警告：")
+                print("检测到子进程执行 submit_process_task 函数")
+                print("这可能导致异常")
 
-        if concurrency_level is None:
-            concurrency_level = os.cpu_count()
-        if report:
-            print(f"处理并行任务，任务数目{len(param_list)}，并行等级{concurrency_level}")
-        start = time.time()
-        pool = multiprocessing.Pool(processes=concurrency_level)  # 开启一次性进程池
-        r = pool.starmap(task, param_list)  # 执行任务
-        pool.close()  # 停止接受任务
-        pool.join()  # 等待完成
-        if report:
-            print(f"任务完成，用时{time.time() - start}秒")
-        return r
+        # 有两种情况会创建进程池
+        # 1 执行此函数的进程为主进程
+        # 2 参数 i_want_to_create_process_pool_in_child_process 为 True，即用户要求在子进程中创建进程池
+        # i_want_to_create_process_pool_in_child_process 默认值为 False
+        # 也就是说，默认情况下，不允许在子进程中创建进程池
+        if i_want_to_create_process_pool_in_child_process or current_pool_is_create_by_main_process:
+
+            if not cls.__I_AM_SURE_MY_CODE_CLOSED_IN_IF_NAME_EQUAL_MAIN:
+                # 删除激进的报错方式
+                # raise PermissionError(
+                #     "在使用CPU并行计算前，应确保你的脚本写在if __name__ == '__main__':"
+                #     + "代码块内部，并显式调用BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()函数"
+                # )
+                print("警告：")
+                print("当前你正在进行 CPU 并行计算。如果你的脚本没有被")
+                print("if __name__ == '__main__':")
+                print("包裹起来，可能会发生意外。")
+                print("如果出现意外情况，请加上 if __name__ == '__main__': ")
+
+            if concurrency_level is None:
+                concurrency_level = os.cpu_count()
+            if concurrency_level <= 0:
+                raise ValueError(f"concurrency_level = {concurrency_level} 值应大于0")
+            if report:
+                print(f"处理并行任务，任务数目{len(param_list)}，并行等级{concurrency_level}")
+            start = time.time()
+            pool = multiprocessing.Pool(
+                processes=concurrency_level
+            )  # 开启一次性进程池
+            r = pool.starmap(task, param_list)  # 执行任务
+            pool.close()  # 停止接受任务
+            pool.join()  # 等待完成
+            if report:
+                print(f"任务完成，用时{time.time() - start}秒")
+            return r
+        else:
+            # 这个分支不应该进入
+            print("警告：")
+            print("检测到子进程执行 submit_process_task 函数")
+            print("这可能导致异常")
 
     class Ellipse:
         """
