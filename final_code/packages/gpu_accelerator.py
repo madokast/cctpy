@@ -10,30 +10,37 @@ ga64 = GPU_ACCELERATOR(float_number_type=GPU_ACCELERATOR.FLOAT64,block_dim_x=512
 日期：2021年5月4日
 """
 
-import pycuda.autoinit
-import pycuda.driver as drv
-from pycuda.compiler import SourceModule
-import multiprocessing  # since v0.1.1 多线程计算
-import time  # since v0.1.1 统计计算时长
-from typing import Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Tuple, TypeVar, Union
-import matplotlib.pyplot as plt
-import math
-import random  # since v0.1.1 随机数
-import sys
-import os  # since v0.1.1 查看CPU核心数
-import numpy
-from scipy.integrate import solve_ivp  # since v0.1.1 ODE45
-import warnings  # since v0.1.1 提醒方法过时
-from packages.point import *
-from packages.constants import *
-from packages.base_utils import BaseUtils
-from packages.local_coordinate_system import LocalCoordinateSystem
-from packages.line2s import *
-from packages.trajectory import Trajectory
-from packages.particles import *
-from packages.magnets import *
-from packages.cct import CCT
+# 是否采用 CPU 模式运行
 from packages.beamline import Beamline
+from packages.cct import CCT
+from packages.magnets import *
+from packages.particles import *
+from packages.trajectory import Trajectory
+from packages.line2s import *
+from packages.local_coordinate_system import LocalCoordinateSystem
+from packages.base_utils import BaseUtils
+from packages.constants import *
+from packages.point import *
+import warnings  # since v0.1.1 提醒方法过时
+from scipy.integrate import solve_ivp  # since v0.1.1 ODE45
+import numpy
+import os  # since v0.1.1 查看CPU核心数
+import sys
+import random  # since v0.1.1 随机数
+import math
+import matplotlib.pyplot as plt
+from typing import Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Tuple, TypeVar, Union
+import time  # since v0.1.1 统计计算时长
+import multiprocessing  # since v0.1.1 多线程计算
+__CPU_MODE__: bool = False
+
+try:
+    import pycuda.autoinit
+    import pycuda.driver as drv
+    from pycuda.compiler import SourceModule
+except ModuleNotFoundError as e:
+    print("未安装 pycuda，GPU 加速功能将以 CPU 模式运行")
+    __CPU_MODE__ = True
 
 
 class GPU_ACCELERATOR:
@@ -43,12 +50,14 @@ class GPU_ACCELERATOR:
     FLOAT64: str = "FLOAT64"
     QS_DATA_LENGTH = 16
 
-    def __init__(self, 
-        float_number_type: str = FLOAT32, 
-        block_dim_x: int = 1024, 
-        max_current_element_number: int = 2000*120, # 电流元数目最多 2000*120，如果 120 段 1匝，匝最多2000匝
-        max_qs_datas_length:int = 10000 # 最多 10000 个 qs
-    ) -> None:
+    def __init__(self,
+                 float_number_type: str = FLOAT32,
+                 block_dim_x: int = 1024,
+                 # 电流元数目最多 2000*120，如果 120 段 1匝，匝最多2000匝
+                 max_current_element_number: int = 2000*120,
+                 max_qs_datas_length: int = 10000,  # 最多 10000 个 qs
+                 cpu_mode: bool = False
+                 ) -> None:
         """
         启动一个 GPU 加速器，用于加速 cctpy 束线的粒子跟踪
         还有一些其他功能，效率不高，仅用作测试
@@ -66,10 +75,15 @@ class GPU_ACCELERATOR:
         默认值 2000*120 （可以看作一共 2000 匝，每匝分 120 段）
 
         max_qs_datas_length 最大 qs 磁铁数目，默认为 10000，取这么大考虑到切片
+
+        cpu_mode 采用 CPU 模式运行
         """
         self.float_number_type = float_number_type
         self.max_current_element_number = int(max_current_element_number)
         self.max_qs_datas_length = int(max_qs_datas_length)
+        self.cpu_mode:bool = __CPU_MODE__ or cpu_mode # 只要两者中有一个为 True 则采用 cpu 模式
+        if self.cpu_mode:
+            print("GPU 加速功能将以 CPU 模式运行")
 
         # 检查 block_dim_x 合法性
         if block_dim_x > 1024 or block_dim_x < 0:
@@ -148,9 +162,9 @@ class GPU_ACCELERATOR:
         #define MAX_CURRENT_ELEMENT_NUMBER ({max_current_element_number})
         #define MAX_QS_DATAS_LENGTH ({max_qs_datas_length})
         """.format(
-            block_dim_x=self.block_dim_x, 
+            block_dim_x=self.block_dim_x,
             max_current_element_number=self.max_current_element_number,
-            max_qs_datas_length = self.max_qs_datas_length
+            max_qs_datas_length=self.max_qs_datas_length
         )
 
         # 向量运算内联函数
@@ -1076,6 +1090,9 @@ class GPU_ACCELERATOR:
         print(f"diff={ga32.vct_length(v) - v.length()}") # diff=-3.1087248775207854e-08
         print(f"diff={ga64.vct_length(v) - v.length()}") # diff=0.0
         """
+        if self.cpu_mode:
+            return p3.length()
+
         code = """
         __global__ void vl(FLOAT* v, FLOAT* ret){
             *ret = vct_len(v);
@@ -1107,6 +1124,9 @@ class GPU_ACCELERATOR:
         0.333333343267441, 0.166666671633720, 0.142857149243355
         0.333333333333333, 0.166666666666667, 0.142857142857143
         """
+        if self.cpu_mode:
+            print(p3)
+
         code = """
         __global__ void vp(FLOAT* v){
             vct_print(v);
@@ -1144,6 +1164,8 @@ class GPU_ACCELERATOR:
         print("GPU32计算结果：",ga32.current_element_B(kls32,p0s32,current_element_number,point))
         print("GPU64计算结果：",ga64.current_element_B(kls64,p0s64,current_element_number,point))
         """
+        if self.cpu_mode:
+            raise NotImplementedError
 
         code = """
         __global__ void ce(FLOAT *kls, FLOAT *p0s, int* number, FLOAT *p, FLOAT *ret){
@@ -1196,6 +1218,8 @@ class GPU_ACCELERATOR:
         # GPU32计算结果： (0.0, 0.0, 0.27500006556510925)
         # GPU64计算结果： (0.0, 0.0, 0.27500000000000024)
         """
+        if self.cpu_mode:
+            raise NotImplementedError
 
         code = """
         __global__ void mq(FLOAT *qs_data, FLOAT *p, FLOAT *ret){
@@ -1252,6 +1276,8 @@ class GPU_ACCELERATOR:
 
         since 2021年5月6日
         """
+        if self.cpu_mode:
+            raise NotImplementedError
 
         code = """
         __global__ void mq_data(FLOAT *qs_data, FLOAT *p, FLOAT *ret){
@@ -1290,6 +1316,11 @@ class GPU_ACCELERATOR:
         }
 
         """
+        if self.cpu_mode:
+            m = P3.zeros()
+            for qs in qss:
+                m += qs.magnetic_field_at(p)
+            return m
 
         mod = SourceModule(self.cuda_code + code)
 
@@ -1297,11 +1328,11 @@ class GPU_ACCELERATOR:
 
         ret = numpy.empty((3,), dtype=self.numpy_dtype)
 
-        qs_datas:List[numpy.ndarray] = []
+        qs_datas: List[numpy.ndarray] = []
         for qs in qss:
             qs_datas.append(qs.to_numpy_array(self.numpy_dtype))
-        
-        qs_datas:numpy.ndarray = numpy.concatenate(tuple(qs_datas))
+
+        qs_datas: numpy.ndarray = numpy.concatenate(tuple(qs_datas))
 
         mq(drv.In(qs_datas.astype(self.numpy_dtype)),
            drv.In(numpy.array([len(qss)], dtype=numpy.int32)),
@@ -1341,6 +1372,9 @@ class GPU_ACCELERATOR:
         # GPU32计算结果2： (-0.021273484453558922, 0.04844103008508682, 1.0980477333068848)
         # GPU64计算结果2： (-0.021273493843573958, 0.04844092114581488, 1.0980479752081695)
         """
+        if self.cpu_mode:
+            return bl.magnetic_field_at(p)
+
         code = """
         __global__ void ma(FLOAT *kls, FLOAT* p0s, int* current_element_number, 
                 FLOAT *qs_data, FLOAT *p, FLOAT *ret){
@@ -1422,6 +1456,15 @@ class GPU_ACCELERATOR:
         # GPU32计算和CPU对比:  Particle[p=(-7.632200578200354e-07, -9.376351096934687e-08, -4.2051931437459694e-08), v=(-25.91341473837383, -14.541439294815063, -4.097360561892856)], rm=7.322282306994799e-36, e=2.3341413164924317e-27, speed=-1.0582007765769958, distance=1.2062657539502197e-07]
         # GPU64计算和CPU对比:  Particle[p=(0.0, -3.7470027081099033e-16, 1.3997050046787862e-16), v=(2.7706846594810486e-08, -2.9802322387695312e-08, 1.6123522073030472e-08)], rm=0.0, e=0.0, speed=0.0, distance=0.0]
         """
+        if self.cpu_mode:
+            ParticleRunner.run_only(
+                p = p,
+                m = bl,
+                length = distance,
+                footstep = footstep
+            )
+            return
+
         mod = SourceModule(self.cuda_code)
 
         track = mod.get_function('track_for_magnet_with_single_qs_g')
@@ -1495,6 +1538,15 @@ class GPU_ACCELERATOR:
         # GPU32计算和CPU对比:  Particle[p=(1.0994185029034043e-07, 1.8206398322284656e-07, 4.595142787458539e-08), v=(11.557053476572037, 4.9727087169885635, 4.51026618166361)], rm=7.322282306994799e-36, e=2.3341413164924317e-27, speed=-1.0582007765769958, distance=4.728079883165037e-08]
         # GPU64计算和CPU对比:  Particle[p=(0.0, 1.1102230246251565e-15, 3.946495907847236e-16), v=(4.470348358154297e-08, 2.9802322387695312e-08, 5.052424967288971e-08)], rm=0.0, e=0.0, speed=0.0, distance=0.0]
         """
+        if self.cpu_mode:
+            ParticleRunner.run_only(
+                p = p,
+                m = bl,
+                length = distance,
+                footstep = footstep
+            )
+            return
+
         mod = SourceModule(self.cuda_code)
 
         track = mod.get_function('track_for_magnet_with_multi_qs_g')
@@ -1504,10 +1556,10 @@ class GPU_ACCELERATOR:
 
         kls_list: List[numpy.ndarray] = []  # 存放多个 cct 线圈的 kls
         p0s_list: List[numpy.ndarray] = []  # 存放多个 cct 线圈的 p0s
-        current_element_number = 0 # 电流元数目
-        qs_number = 0 # qs 数目
+        current_element_number = 0  # 电流元数目
+        qs_number = 0  # qs 数目
 
-        qs_datas:List[numpy.ndarray] = [] # qs_data 数据
+        qs_datas: List[numpy.ndarray] = []  # qs_data 数据
         for m in bl.magnets:
             if isinstance(m, CCT):
                 cct = CCT.as_cct(m)
@@ -1518,8 +1570,9 @@ class GPU_ACCELERATOR:
                 p0s_list.append(p0s)
             elif isinstance(m, QS):
                 qs = QS.as_qs(m)
-                qs_datas.append( qs.to_numpy_array(numpy_dtype=self.numpy_dtype))
-                qs_number+=1
+                qs_datas.append(qs.to_numpy_array(
+                    numpy_dtype=self.numpy_dtype))
+                qs_number += 1
             else:
                 raise ValueError(f"磁铁 {m} 无法用 GPU 加速")
 
@@ -1540,7 +1593,6 @@ class GPU_ACCELERATOR:
         )
 
         p.populate(RunningParticle.from_numpy_array_data(particle))
-
 
     def track_multi_particle_for_magnet_with_single_qs(self, bl: Beamline, ps: List[RunningParticle], distance: float, footstep: float):
         """
@@ -1584,6 +1636,15 @@ class GPU_ACCELERATOR:
         Plot2.equal()
         Plot2.show()
         """
+        if self.cpu_mode:
+            ParticleRunner.run_only(
+                p = ps,
+                m = bl,
+                length = distance,
+                footstep = footstep
+            )
+            return
+
         mod = SourceModule(self.cuda_code)
 
         track = mod.get_function(
@@ -1674,6 +1735,15 @@ class GPU_ACCELERATOR:
         Plot2.equal()
         Plot2.show()
         """
+        if self.cpu_mode:
+            ParticleRunner.run_only(
+                p = ps,
+                m = bl,
+                length = distance,
+                footstep = footstep
+            )
+            return
+
         mod = SourceModule(self.cuda_code)
 
         track = mod.get_function(
@@ -1685,7 +1755,7 @@ class GPU_ACCELERATOR:
             p.to_numpy_array_data(numpy_dtype=self.numpy_dtype) for p in ps]
         current_element_number = 0
 
-        qs_datas:List[numpy.ndarray] = []
+        qs_datas: List[numpy.ndarray] = []
         qs_number = 0
 
         for m in bl.magnets:
@@ -1698,8 +1768,9 @@ class GPU_ACCELERATOR:
                 p0s_list.append(p0s)
             elif isinstance(m, QS):
                 qs = QS.as_qs(m)
-                qs_datas.append(qs.to_numpy_array(numpy_dtype=self.numpy_dtype))
-                qs_number+=1
+                qs_datas.append(qs.to_numpy_array(
+                    numpy_dtype=self.numpy_dtype))
+                qs_number += 1
             else:
                 raise ValueError(f"磁铁 {m} 无法用 GPU 加速")
 
@@ -1726,13 +1797,25 @@ class GPU_ACCELERATOR:
             ps[i].populate(
                 RunningParticle.from_numpy_array_data(particles_all[i]))
 
-
     def track_multi_particle_beamline_for_magnet_with_single_qs(
         self, bls: List[Beamline], ps: List[RunningParticle],
             distance: float, footstep: float) -> List[List[RunningParticle]]:
         """
         多粒子多束线跟踪，电流元 + 单个 QS
         """
+        if self.cpu_mode:
+            ret:List[List[RunningParticle]] = []
+            for bl in bls:
+                cps = [p.copy() for p in ps]
+                ParticleRunner.run_only(
+                    p = cps,
+                    m = bl,
+                    length = distance,
+                    footstep = footstep
+                )
+                ret.append(cps)
+            return ret
+
         mod = SourceModule(self.cuda_code)
 
         track = mod.get_function(
@@ -1822,13 +1905,26 @@ class GPU_ACCELERATOR:
 
         return ret
 
-
     def track_multi_particle_beamline_for_magnet_with_multi_qs(
         self, bls: List[Beamline], ps: List[RunningParticle],
             distance: float, footstep: float) -> List[List[RunningParticle]]:
         """
         多粒子多束线跟踪，电流元 + 多个 QS
         """
+        if self.cpu_mode:
+            ret:List[List[RunningParticle]] = []
+            for bl in bls:
+                cps = [p.copy() for p in ps]
+                ParticleRunner.run_only(
+                    p = cps,
+                    m = bl,
+                    length = distance,
+                    footstep = footstep
+                )
+                ret.append(cps)
+            return ret
+
+
         mod = SourceModule(self.cuda_code)
 
         track = mod.get_function(
@@ -1850,8 +1946,7 @@ class GPU_ACCELERATOR:
             current_element_number = 0
 
             qs_number = 0
-            qs_datas:List[numpy.ndarray] = []
-
+            qs_datas: List[numpy.ndarray] = []
 
             for m in bl.magnets:
                 if isinstance(m, CCT):
@@ -1863,15 +1958,15 @@ class GPU_ACCELERATOR:
                     p0s_list.append(p0s)
                 elif isinstance(m, QS):
                     qs = QS.as_qs(m)
-                    qs_datas.append(qs.to_numpy_array(numpy_dtype=self.numpy_dtype))
-                    qs_number+=1
+                    qs_datas.append(qs.to_numpy_array(
+                        numpy_dtype=self.numpy_dtype))
+                    qs_number += 1
                 else:
                     raise ValueError(f"{m} 无法用 GPU 加速")
 
             kls_all = numpy.concatenate(tuple(kls_list))  # 多个连起来
             p0s_all = numpy.concatenate(tuple(p0s_list))
             qs_datas_con = numpy.concatenate(tuple(qs_datas))
-
 
             # 制作 kls_all_all_beamline  p0s_all_all_beamline
             # 这里复制一下的意义是什么呢？
@@ -1885,19 +1980,18 @@ class GPU_ACCELERATOR:
             kls_all_pad[0:len(kls_all)] = kls_all
             p0s_all_pad[0:len(p0s_all)] = p0s_all
 
-
             kls_all_all_beamline.append(kls_all_pad)
             p0s_all_all_beamline.append(p0s_all_pad)
 
             # 制作 qs_datas_all_beamline
             qs_datas_all_pad = numpy.zeros(
                 (self.max_qs_datas_length*GPU_ACCELERATOR.QS_DATA_LENGTH,),
-                 dtype=self.numpy_dtype
+                dtype=self.numpy_dtype
             )
-            qs_datas_all_pad[0:qs_number*GPU_ACCELERATOR.QS_DATA_LENGTH] = qs_datas_con
+            qs_datas_all_pad[0:qs_number *
+                             GPU_ACCELERATOR.QS_DATA_LENGTH] = qs_datas_con
 
             qs_datas_all_beamline.append(qs_datas_all_pad)
-
 
             particles_all = numpy.concatenate(tuple(particle_list))
 
@@ -1905,9 +1999,12 @@ class GPU_ACCELERATOR:
             current_element_numbers.append(current_element_number)
             qs_numbers.append(qs_number)
 
-        kls_all_all_beamline:numpy.ndarray  = numpy.concatenate(tuple(kls_all_all_beamline))
-        p0s_all_all_beamline:numpy.ndarray  = numpy.concatenate(tuple(p0s_all_all_beamline))
-        qs_datas_all_beamline:numpy.ndarray = numpy.concatenate(tuple(qs_datas_all_beamline))
+        kls_all_all_beamline: numpy.ndarray = numpy.concatenate(
+            tuple(kls_all_all_beamline))
+        p0s_all_all_beamline: numpy.ndarray = numpy.concatenate(
+            tuple(p0s_all_all_beamline))
+        qs_datas_all_beamline: numpy.ndarray = numpy.concatenate(
+            tuple(qs_datas_all_beamline))
         particles_all_all_beamline = numpy.concatenate(
             tuple(particles_all_all_beamline))
 

@@ -32,12 +32,8 @@ from packages.particles import Protons, RunningParticle, ParticleRunner, Particl
 from packages.beamline import Beamline
 from packages.plot import Plot2, Plot3
 from packages.function_part import Function_Part
-try:
-    from packages.gpu_accelerator import GPU_ACCELERATOR
-except Exception as e:
-    print("导入 GPU_ACCELERATOR 类出现异常：", e)
-    print("可能是没有安装好 pycuda，出现此异常不影响 ccpty 核心功能的使用")
-from opera_utils import Brick8s, OperaConductorScript, OperaFieldTableMagnet
+from packages.gpu_accelerator import GPU_ACCELERATOR
+from opera_utils import Brick8,Brick8s, OperaConductorScript, OperaFieldTableMagnet
 from cosy_utils import CosyMap, MagnetSlicer, SR
 from hust_sc_gantry import HUST_SC_GANTRY, beamline_phase_ellipse_multi_delta
 

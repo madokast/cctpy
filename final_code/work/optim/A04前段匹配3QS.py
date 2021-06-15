@@ -12,9 +12,10 @@
 from os import error, path
 import sys
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
+sys.path.append(path.dirname(path.dirname(path.abspath(path.dirname(__file__)))))
 from cctpy import *
-from work.A01run import *
-from work.A01geatpy_problem import *
+from work.optim.A04run import *
+from work.optim.A04geatpy_problem import *
 
 
 if __name__ == '__main__':
@@ -39,31 +40,3 @@ if __name__ == '__main__':
     print('evaluation times: %d times' % (myAlgorithm.evalsNum))
     print('NDnum: %d' % (NDset.sizes))
     print('ParetoNum: %d' % (int(NDset.sizes / myAlgorithm.passTime)))
-
-# t = (
-#     Trajectory.set_start_point(P2.origin())
-#     .first_line(direct=P2.x_direct(),length=1.592)
-#     .add_arc_line(radius=0.95,clockwise=False,angle_deg=22.5)
-#     .add_strait_line(length=0.5+0.27+0.5)
-#     .add_arc_line(radius=0.95,clockwise=False,angle_deg=22.5)
-#     .add_strait_line(length=1.592)
-
-#     .add_strait_line(2.5)
-#     .add_arc_line(radius=0.95,clockwise=True,angle_deg=67.5)
-#     .add_strait_line(length=0.5+0.27+0.5)
-#     .add_arc_line(radius=0.95,clockwise=True,angle_deg=67.5)
-#     .add_strait_line(2.5)
-# )
-
-# print(t.point_at_end())
-
-# Plot2.plot(t)
-# Plot2.show()
-
-
-
-# if __name__ == "__main__":
-#     d = create_gantry_beamline()
-#     print(d.point_at_end())
-#     Plot2.plot(d)
-#     Plot2.show()

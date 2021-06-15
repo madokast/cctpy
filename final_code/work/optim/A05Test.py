@@ -8,9 +8,10 @@ CCT 建模优化代码
 from os import error, path
 import sys
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
+sys.path.append(path.dirname(path.dirname(path.abspath(path.dirname(__file__)))))
 import time
 import numpy as np
-from work.A05run import create_gantry_beamline
+from work.optim.A05run import create_gantry_beamline
 from hust_sc_gantry import beamline_phase_ellipse_multi_delta
 from packages.constants import MM
 

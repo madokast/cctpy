@@ -1,10 +1,10 @@
 from os import error, path
 import sys
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
-
+sys.path.append(path.dirname(path.dirname(path.abspath(path.dirname(__file__)))))
 from hust_sc_gantry import beamline_phase_ellipse_multi_delta
-from work.A04geatpy_problem import *
-from work.A04run import *
+from work.optim.A04geatpy_problem import *
+from work.optim.A04run import *
 from cctpy import *
 
 

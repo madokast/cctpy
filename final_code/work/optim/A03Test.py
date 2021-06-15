@@ -12,9 +12,10 @@
 from os import error, path
 import sys
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
+sys.path.append(path.dirname(path.dirname(path.abspath(path.dirname(__file__)))))
 from cctpy import *
-from work.A03run import *
-from work.A03geatpy_problem import *
+from work.optim.A03run import *
+from work.optim.A03geatpy_problem import *
 
 
 def beamline_phase_ellipse_multi_delta(bl: Beamline, particle_number: int,

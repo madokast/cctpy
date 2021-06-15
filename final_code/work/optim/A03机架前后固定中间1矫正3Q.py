@@ -12,9 +12,10 @@
 from os import error, path
 import sys
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
+sys.path.append(path.dirname(path.dirname(path.abspath(path.dirname(__file__)))))
 from cctpy import *
-from work.A02run import *
-from work.A02geatpy_problem import *
+from work.optim.A03run import *
+from work.optim.A03geatpy_problem import *
 
 
 if __name__ == '__main__':
