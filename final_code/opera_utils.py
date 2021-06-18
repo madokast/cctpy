@@ -8,11 +8,32 @@ OPERA 扩展，主要包括两个功能：
 作者：赵润晓
 日期：2021年6月3日
 """
-from typing import List
-from packages.point import P3
-from packages.magnets import Magnet
-from packages.cct import CCT
-from packages.constants import M
+
+import multiprocessing  # 多线程计算
+import time  # 统计计算时长
+from typing import Callable, Dict, Generic, Iterable, List, NoReturn, Optional, Tuple, TypeVar, Union
+import matplotlib.pyplot as plt
+import math
+import random  # 随机数
+import sys
+import os  # 查看CPU核心数
+import numpy
+from scipy.integrate import solve_ivp  # since v0.1.1 ODE45
+import warnings  # 提醒方法过时
+
+from packages.constants import M, MM, LIGHT_SPEED, RAD, MRAD, J, eV, MeV, MeV_PER_C, T
+from packages.base_utils import BaseUtils
+from packages.point import P2, P3, ValueWithDistance
+from packages.local_coordinate_system import LocalCoordinateSystem
+from packages.line2s import Line2, StraightLine2, ArcLine2
+from packages.line3s import Line3, RightHandSideLine3, FunctionLine3, TwoPointLine3, DiscretePointLine3
+from packages.trajectory import Trajectory
+from packages.magnets import ApertureObject, Magnet, UniformMagnet, LocalUniformMagnet, CombinedMagnet, QS, Q
+from packages.cct import CCT, Wire, AGCCT_CONNECTOR
+from packages.particles import Protons, RunningParticle, ParticleRunner, ParticleFactory, PhaseSpaceParticle
+from packages.beamline import Beamline
+from packages.plot import Plot2, Plot3
+from packages.function_part import Function_Part
 
 
 # OPERA 导体文件头

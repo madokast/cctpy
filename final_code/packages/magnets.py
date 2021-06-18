@@ -558,6 +558,10 @@ class CombinedMagnet(Magnet):
         """
         self.__magnets.append(magnet)
         return self
+    
+    def add_all(self, magnets: Iterable[Magnet])->"CombinedMagnet":
+        self.__magnets.extend(magnets)
+        return self
 
     def get_magnets(self) -> List[Magnet]:
         """

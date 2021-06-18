@@ -282,6 +282,15 @@ class P2:
         这个方法主要用于 matplotlib 绘图
         since v0.1.1
         """
+        if not isinstance(p2_list,list):
+            p2_list = [p2_list]
+        
+        if len(p2_list)<=0:
+            return ([],[])
+        
+        if not isinstance(p2_list[0],P2):
+            raise ValueError(f"p2_list 不是 P2 数组，p2_list={p2_list}")
+
         return ([
             p.x for p in p2_list
         ], [

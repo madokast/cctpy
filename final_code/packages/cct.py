@@ -56,10 +56,22 @@ class CCT(Magnet, ApertureObject):
             # 每匝线圈离散电流元数目，数字越大计算精度越高
             disperse_number_per_winding: int = 120,
     ):
+        """
+        bending_angle 这个定义有冗余，它等于 
+        abs(end_point_in_ksi_phi_coordinate.y-starting_point_in_ksi_phi_coordinate.y).to_angle()
+
+        """
         if bending_angle < 0:
-            print(f"CCT 偏转角度应为正数，不能是 {bending_angle}，需要反向偏转的 CCT，" +
-                  "应通过 starting_point_in_ksi_phi_coordinate，和 end_point_in_ksi_phi_coordinate 控制偏转方向"
-                  )
+            raise ValueError(f"CCT 偏转角度应为正数，不能是 {bending_angle}，需要反向偏转的 CCT，" +
+                             "应通过 starting_point_in_ksi_phi_coordinate，和 end_point_in_ksi_phi_coordinate 控制偏转方向"
+                             )
+        if big_r < 0:
+            raise ValueError(f"big_r = {big_r} 为负数，非法")
+        if small_r < 0:
+            raise ValueError(f"small_r = {small_r} 为负数，非法")
+        if small_r >= big_r:
+            raise ValueError(f"small_r {small_r} >= big_r {big_r}，非法")
+
         self.local_coordinate_system = local_coordinate_system
         self.big_r = float(big_r)
         self.small_r = float(small_r)
@@ -167,11 +179,12 @@ class CCT(Magnet, ApertureObject):
         for i in range(len(self.tilt_radians)):
             if BaseUtils.equal(self.tilt_angles[i], 90.0):
                 continue
-            phi += (
-                (1 / math.tan(self.tilt_radians[i]))
-                / ((i + 1) * math.sinh(self.eta))
-                * math.sin((i + 1) * ksi)
-            )
+            else:
+                phi += (
+                    (1 / math.tan(self.tilt_radians[i]))
+                    / ((i + 1) * math.sinh(self.eta))
+                    * math.sin((i + 1) * ksi)
+                )
         return phi
 
     class BipolarToroidalCoordinateSystem:
@@ -523,6 +536,91 @@ class CCT(Magnet, ApertureObject):
 
         return math.sinh(CCT.calculate_eta(big_r, small_r))
 
+    def cut_to_single_winding_cct(self) -> List['CCT']:
+        """
+        切成单匝 CCT
+        原 CCT self，有多少匝，就切成多少
+        这个函数用于误差分析/敏感度分析做准备
+
+        新增于 2021年6月17日、同时通过测试
+        """
+        # ret
+        ccts: List[CCT] = []
+        # 偏转角度
+        bending_angle = self.bending_angle / self.winding_number
+
+        points_in_ksi_phi_coordinate: List[P2] = BaseUtils.linspace(
+            self.starting_point_in_ksi_phi_coordinate,
+            self.end_point_in_ksi_phi_coordinate,
+            self.winding_number+1
+        )
+
+        for i in range(self.winding_number):
+            start_point = points_in_ksi_phi_coordinate[i]
+            end_point = points_in_ksi_phi_coordinate[i+1]
+
+            ccts.append(CCT(
+                local_coordinate_system=self.local_coordinate_system,
+                big_r=self.big_r,
+                small_r=self.small_r,
+                bending_angle=bending_angle,
+                tilt_angles=self.tilt_angles,
+                winding_number=1,
+                current=self.current,
+                starting_point_in_ksi_phi_coordinate=start_point,
+                end_point_in_ksi_phi_coordinate=end_point,
+                disperse_number_per_winding=self.disperse_number_per_winding
+            ))
+
+        return ccts
+
+    @staticmethod
+    def create_by_existing_cct(
+            existing_cct: 'CCT',
+            local_coordinate_system: Optional[LocalCoordinateSystem] = None,
+            big_r: Optional[float] = None,
+            small_r: Optional[float] = None,
+            bending_angle: Optional[float] = None,
+            tilt_angles: Optional[List[float]] = None,
+            winding_number: Optional[int] = None,
+            current: Optional[float] = None,
+            starting_point_in_ksi_phi_coordinate: Optional[P2] = None,
+            end_point_in_ksi_phi_coordinate: Optional[P2] = None,
+            disperse_number_per_winding: Optional[int] = None,
+    ) -> 'CCT':
+        """
+        通过一个已经存在的 CCT 创建新 CCT
+
+        新增于 2021年6月17日
+        """
+        def get_one(first_candidate, second_candidate):
+            """
+            获得 first_candidate/second_candidate 中的一个
+            优先 first_candidate，如果其为空则第二个
+            """
+            # if second_candidate is None:
+            #     raise ValueError(f"second_candidate 为空")
+            return first_candidate if first_candidate is not None else second_candidate
+
+        return CCT(
+            local_coordinate_system=get_one(
+                local_coordinate_system, existing_cct.local_coordinate_system),
+            big_r=get_one(big_r, existing_cct.big_r),
+            small_r=get_one(small_r, existing_cct.small_r),
+            bending_angle=get_one(
+                bending_angle, existing_cct.bending_angle),
+            tilt_angles=get_one(tilt_angles, existing_cct.tilt_angles),
+            winding_number=get_one(
+                winding_number, existing_cct.winding_number),
+            current=get_one(current, existing_cct.current),
+            starting_point_in_ksi_phi_coordinate=get_one(
+                starting_point_in_ksi_phi_coordinate, existing_cct.starting_point_in_ksi_phi_coordinate),
+            end_point_in_ksi_phi_coordinate=get_one(
+                end_point_in_ksi_phi_coordinate, existing_cct.end_point_in_ksi_phi_coordinate),
+            disperse_number_per_winding=get_one(
+                disperse_number_per_winding, existing_cct.disperse_number_per_winding)
+        )
+
 
 class Wire(Magnet):
     """
@@ -733,6 +831,7 @@ class Wire(Magnet):
             BaseUtils.angle_to_radian(360/cct.winding_number)
         )
 
+
 class AGCCT_CONNECTOR(Magnet):
     """
     agcct 连接段的构建，尽可能的自动化
@@ -741,6 +840,7 @@ class AGCCT_CONNECTOR(Magnet):
     这是什么概念呢？把 CCT 一匝分为 720 段，才能达到相接处 0.5 度变化。
     鉴于 0.5 度似乎可以忽略，暂时就不解决这个 bug 了（因为连接过程很复杂）
     """
+
     def __init__(self, agcct1: CCT, agcct2: CCT, step: float = 1*MM) -> None:
         # fields
         # self.current
@@ -779,7 +879,7 @@ class AGCCT_CONNECTOR(Magnet):
             y=agcct1.p2_function(ksi).x*agcct1.small_r))(
             pre_cct_end_point_in_ksi_phi_coordinate.x
             # 下行的乘法很重要，因为自变量不一定是随着绕线增大，如果反向绕线就是减小 fixed 2021年1月8日
-        ) *(-1 if agcct1.starting_point_in_ksi_phi_coordinate.x > agcct1.end_point_in_ksi_phi_coordinate.x else 1)
+        ) * (-1 if agcct1.starting_point_in_ksi_phi_coordinate.x > agcct1.end_point_in_ksi_phi_coordinate.x else 1)
         vb = BaseUtils.derivative(lambda ksi: P2(
             x=agcct2.p2_function(ksi).y*agcct2.big_r,
             y=agcct2.p2_function(ksi).x*agcct2.small_r))(

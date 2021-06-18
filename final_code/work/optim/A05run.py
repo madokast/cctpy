@@ -291,8 +291,8 @@ def run(params: np.ndarray):
                 statistic_y_per_dp.add(pp.y / MM)
 
             # 每个动量分散的束斑大小
-            statistic_width_x_per_dp.add(statistic_x_per_dp.helf_width())
-            statistic_width_y_per_dp.add(statistic_y_per_dp.helf_width())
+            statistic_width_x_per_dp.add(statistic_x_per_dp.half_width())
+            statistic_width_y_per_dp.add(statistic_y_per_dp.half_width())
             statistic_x_per_dp.clear()
             statistic_y_per_dp.clear()
 

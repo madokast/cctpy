@@ -116,8 +116,8 @@ if __name__ == "__main__":
 # footstep 步长，默认 20 mm
     traj = ParticleRunner.run_get_trajectory(proton250_0,uniform_magnet243,math.pi)
     # 去除下面两行注释查看绘图结果
-    plt.gca(projection="3d").plot(*P3.extract(traj))
-    plt.show()
+    # plt.gca(projection="3d").plot(*P3.extract(traj))
+    # plt.show()
 
 # 函数 run_get_all_info() 运行一个粒子，获取全部信息
 # 所谓全部信息即每一步粒子的所有信息，包含位置、速度等，返回值是 RunningParticle 数组

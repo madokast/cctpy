@@ -6,6 +6,8 @@ GPU CUDA 加速 cctpy 束流跟踪
 ga32 = GPU_ACCELERATOR(float_number_type=GPU_ACCELERATOR.FLOAT32)
 ga64 = GPU_ACCELERATOR(float_number_type=GPU_ACCELERATOR.FLOAT64,block_dim_x=512)
 
+2021年6月17日 增加 CPU 模式
+
 作者：赵润晓
 日期：2021年5月4日
 """
@@ -2037,3 +2039,117 @@ class GPU_ACCELERATOR:
             ret.append(ps_ran)
 
         return ret
+
+    
+    def track_phase_ellipse_in_multi_beamline(
+        self, 
+        beamlines: List[Beamline],
+        x_sigma_mm: float,
+        xp_sigma_mrad: float,
+        y_sigma_mm: float,
+        yp_sigma_mrad,
+        delta: float,
+        particle_number: int,
+        kinetic_MeV: float,
+        s: float = 0.0,
+        length: Optional[float] = None,
+        footstep: float = 10 * MM,
+        report: bool = True
+    )->List[Tuple[List[P2], List[P2]]]:
+        """
+        是 Beamline.track_phase_ellipse 函数的升级
+        Beamline.track_phase_ellipse 只能在 CPU 中运行，且一次只能计算一个机架
+        这里计算多组机架，返回每组机架对应的相空间 x-xp / y-yp 粒子
+
+        注意：这些机架的设计轨道应该一致！即机架长度、起点终点应该相同
+        """
+        if length is None:
+            length = beamlines[0].trajectory.get_length() - s
+        
+        # 起点和终点位置的理想粒子
+        ip_start = ParticleFactory.create_proton_along(
+            beamlines[0].trajectory, s, kinetic_MeV)
+        ip_end = ParticleFactory.create_proton_along(
+            beamlines[0].trajectory, s + length, kinetic_MeV
+        )
+
+        # 起点处相空间粒子
+        pp_x = PhaseSpaceParticle.phase_space_particles_along_positive_ellipse_in_xxp_plane(
+            xMax=x_sigma_mm * MM,
+            xpMax=xp_sigma_mrad * MRAD,
+            delta=delta,
+            number=particle_number,
+        )
+
+        pp_y = PhaseSpaceParticle.phase_space_particles_along_positive_ellipse_in_yyp_plane(
+            yMax=y_sigma_mm * MM,
+            ypMax=yp_sigma_mrad * MRAD,
+            delta=delta,
+            number=particle_number,
+        )
+
+        # 起点处实际粒子
+        rp_x = ParticleFactory.create_from_phase_space_particles(
+            ideal_particle=ip_start,
+            coordinate_system=ip_start.get_natural_coordinate_system(),
+            phase_space_particles=pp_x,
+        )
+
+        rp_y = ParticleFactory.create_from_phase_space_particles(
+            ideal_particle=ip_start,
+            coordinate_system=ip_start.get_natural_coordinate_system(),
+            phase_space_particles=pp_y,
+        )
+
+        # 合起来
+        all_rp = rp_x + rp_y
+
+        ps_end_list_list = self.track_multi_particle_beamline_for_magnet_with_multi_qs(
+            bls=beamlines,
+            ps=all_rp,
+            distance=length,
+            footstep=footstep
+        )
+
+        # 返回值
+        ret:List[Tuple[List[P2], List[P2]]] = []
+
+        for ps_end_list_each_beamline in ps_end_list_list:
+            # 不知道为什么，有些粒子的速率 speed 和速度 velocity 差别巨大
+            for p in ps_end_list_each_beamline:
+                p.speed = p.velocity.length()
+
+            # 转为相空间
+            pps_end_list_each_beamline: List[PhaseSpaceParticle] = PhaseSpaceParticle.create_from_running_particles(
+                ip_end, ip_end.get_natural_coordinate_system(), ps_end_list_each_beamline
+            )
+
+            # 前一半是 x-xp
+            pps_end_list_each_beamline_for_xxp = pps_end_list_each_beamline[0:particle_number]
+
+            # 后一半是 y-yp
+            pps_end_list_each_beamline_for_yyp = pps_end_list_each_beamline[particle_number:]
+
+            # 前一半提取出来
+            xs = PhaseSpaceParticle.phase_space_particles_project_to_xxp_plane(
+                phase_space_particles=pps_end_list_each_beamline_for_xxp,
+                convert_to_mm=True
+            )
+
+            # 后一半提取出来
+            ys = PhaseSpaceParticle.phase_space_particles_project_to_yyp_plane(
+                phase_space_particles=pps_end_list_each_beamline_for_yyp,
+                convert_to_mm=True
+            )
+
+            ret.append(
+                (xs,ys)
+            )
+
+        return ret
+
+
+
+
+
+

@@ -319,8 +319,8 @@ class Beamline(Line2, Magnet, ApertureObject):
 
         print(
             f"delta={delta}," +
-            f"avg_size_x={s.clear().add_all(P2.extract(xs)[0]).helf_width()}mm," +
-            f"avg_size_y={s.clear().add_all(P2.extract(ys)[0]).helf_width()}mm"
+            f"avg_size_x={s.clear().add_all(P2.extract(xs)[0]).half_width()}mm," +
+            f"avg_size_y={s.clear().add_all(P2.extract(ys)[0]).half_width()}mm"
         )
 
         return (xs, ys)
@@ -794,6 +794,9 @@ class Beamline(Line2, Magnet, ApertureObject):
 
     def get_magnets(self) -> List[Magnet]:
         return self.magnets
+
+    def get_trajectory(self) -> Trajectory:
+        return self.trajectory
 
     def __str__(self) -> str:
         return f"beamline(magnet_size={len(self.magnets)}, traj_len={self.trajectory.get_length()})"

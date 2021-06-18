@@ -314,17 +314,25 @@ class BaseUtils:
     def solve_ode(
         t0: float,
         t_end: float,
-        Y0: T,
-        y_derived_function: Callable[[float, T], T],
+        Y0: List[float],
+        y_derived_function: Callable[[float, List[float]], List[float]],
         dt: float,
         record: bool = False,
         absolute_tolerance: float = 1e-8,
         relative_tolerance: float = 1e-8
-    ) -> Union[T, Tuple[List[float], List[T]]]:
+    ) -> numpy.ndarray:  # 二维数组
         """
         scipy 中 ode45
         即变步长 4 阶 runge kutta 法
         since v0.1.1
+
+        Y 必须是一维组形式，即 Y = [y0, y1, y2....]
+
+        返回值 ret 是一个二维数组
+        ret[0][-1] 是 y0 在 t_end 的值
+        ret[1][-1] 是 y1 在 t_end 的值
+        ret[2][-1] 是 y2 在 t_end 的值
+        。。。。。。
         """
         if record:
             raise NotImplementedError
@@ -334,8 +342,8 @@ class BaseUtils:
             #               t0, t_end], Y0, t_eval=t_eval, rtol=1e-8, atol=1e-8, first_step=dt, max_step=dt)
         else:
             s = solve_ivp(y_derived_function, [
-                t0, t_end], [Y0], rtol=relative_tolerance, atol=absolute_tolerance, first_step=dt, max_step=dt)
-            return s.y[0][-1]
+                t0, t_end], Y0, rtol=relative_tolerance, atol=absolute_tolerance, first_step=dt, max_step=dt)
+            return s.y
 
     # 多进程安全提示 since v0.1.1
     __I_AM_SURE_MY_CODE_CLOSED_IN_IF_NAME_EQUAL_MAIN: bool = False
@@ -364,7 +372,7 @@ class BaseUtils:
                             param_list: List[List],
                             concurrency_level: Optional[int] = None,
                             report: bool = True,
-                            i_want_to_create_process_pool_in_child_process:bool = False
+                            i_want_to_create_process_pool_in_child_process: bool = False
                             ) -> List[T]:
         """
         提交任务多进程并行
@@ -383,7 +391,7 @@ class BaseUtils:
         # 确定当前进程池是否由主进程创建
         current_pool_is_create_by_main_process = False
         cpn = multiprocessing.current_process().name.upper()
-        if cpn.find("POOL") == -1 :
+        if cpn.find("POOL") == -1:
             current_pool_is_create_by_main_process = True
         else:
             if not i_want_to_create_process_pool_in_child_process:
@@ -413,7 +421,8 @@ class BaseUtils:
             if concurrency_level is None:
                 concurrency_level = os.cpu_count()
             if concurrency_level <= 0:
-                raise ValueError(f"concurrency_level = {concurrency_level} 值应大于0")
+                raise ValueError(
+                    f"concurrency_level = {concurrency_level} 值应大于0")
             if report:
                 print(f"处理并行任务，任务数目{len(param_list)}，并行等级{concurrency_level}")
             start = time.time()
@@ -663,7 +672,7 @@ class BaseUtils:
             """
             return (self.max()-self.min())
 
-        def helf_width(self) -> float:
+        def half_width(self) -> float:
             """
             半宽
             即 (max-min)/2
@@ -723,6 +732,18 @@ class BaseUtils:
 
         since v0.1.4
         """
+        @classmethod
+        def uniformly_distribution(cls,max:float=1.0,min:float=0.0) -> float:
+            """
+            max ~ min 均匀分布
+            新增于 2021年6月17日
+            """
+            if max < min:
+                return ValueError(f"max {max} < min {min}")
+            center = (max+min)/2.0
+            width = max - min
+            return random.random() * width + center - 0.5 * width
+
         @classmethod
         def uniformly_distributed_along_circumference(cls) -> P2:
             """
@@ -1014,6 +1035,24 @@ class BaseUtils:
             return random.gauss(mu, sigma)
 
         @classmethod
+        def gauss_limited(cls, mu: float = 0.0, sigma: float = 1.0, limit: float = 2.0) -> float:
+            """
+            高斯分布
+
+            since v0.1.4
+            """
+            if limit == 0.0 or limit == -0.0:
+                raise ValueError(f"limit 取值不能为 0.0")
+
+
+            limit = abs(limit)
+
+            while True:
+                r = random.gauss(mu, sigma)
+                if r < limit and r > -limit:
+                    return r
+
+        @classmethod
         def gauss_multi_dimension(cls, mu_list: List[float], sigma_list: List[float]) -> List[float]:
             """
             多维无关高斯分布
@@ -1028,3 +1067,50 @@ class BaseUtils:
                     "gauss_multi_dimension mu_list 和 sigma_list 维度不同一")
 
             return [cls.gauss(mu_list[i], sigma_list[i]) for i in range(len_mu)]
+
+    class Timer:
+        """
+        计时器
+        2021年6月16日 新增
+        """
+
+        def __init__(self) -> None:
+            self.time = time.time()
+
+        def reset(self) -> None:
+            self.time = time.time()
+
+        def period(self) -> float:
+            return time.time() - self.time
+
+    @staticmethod
+    def combine(list_a: List[T], list_b: List[V]) -> List[Tuple[T, V]]:
+        """
+        组合
+        输入两个长度一样的数组 [1,2,3...] [a,b,c...]
+        返回组合数组 [
+            (1,a),
+            (2,b),
+            (3,c),
+            ...
+        ]
+
+        2021年6月16日 新增
+        """
+        len_a = len(list_a)
+        len_b = len(list_b)
+        if len_a != len_b:
+            print(f"数组长度不一致，组合时取小数组")
+            print(f"list_a = {list_a}")
+            print(f"list_b = {list_b}")
+
+        length = min(len_a, len_b)
+
+        ret: List[Tuple[T, V]] = []
+
+        for i in range(length):
+            ret.append(
+                (list_a[i], list_b[i],)
+            )
+
+        return ret

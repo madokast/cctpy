@@ -938,6 +938,12 @@ class Plot2:
         plt.legend(labels=list(labels), prop=font_label)
 
     @staticmethod
+    def subplot(info)->None:
+        if not Plot2.INIT:
+            Plot2.__init()
+        plt.subplot(info)  
+
+    @staticmethod
     def show():
         """
         展示图象

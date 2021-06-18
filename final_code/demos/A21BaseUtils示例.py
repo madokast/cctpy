@@ -171,5 +171,5 @@ ts,Ys = BaseUtils.runge_kutta4(0,3,0,yd,dt=0.01,record=True)
 # Plot2.show()
 
 yd = lambda t,Y:2*t
-y3 = BaseUtils.solve_ode(0,3,0,yd,dt=0.1)
-print(y3) # 9.0
+y3 = BaseUtils.solve_ode(0,3,[0],lambda x,Y:[2*x],dt=0.1)
+print(y3[0][-1]) # 9.0
