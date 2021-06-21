@@ -34,7 +34,7 @@ from packages.plot import Plot2, Plot3
 from packages.function_part import Function_Part
 from packages.gpu_accelerator import GPU_ACCELERATOR
 from opera_utils import Brick8,Brick8s, OperaConductorScript, OperaFieldTableMagnet
-from cosy_utils import CosyMap, MagnetSlicer, SR
+from cosy_utils import CosyMap, MagnetSlicer, SR, COSY_MAP_手动优化至伪二阶,COSY_MAP_廖益诚五阶光学优化
 from hust_sc_gantry import HUST_SC_GANTRY, beamline_phase_ellipse_multi_delta
 
 

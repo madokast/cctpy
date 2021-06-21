@@ -88,12 +88,13 @@ if __name__ == '__main__':
         bl.magnets.extend(quccts)
         bl.magnets.extend(other_magnets)
 
+        sigma = 0.4*MM
         for dicct in diccts:
             bl.magnets.append(CCT.create_by_existing_cct(
                 existing_cct=dicct,
-                # small_r = dicct.small_r + BaseUtils.Random.gauss_limited(0,2*MM,4*MM)
+                small_r = dicct.small_r + BaseUtils.Random.gauss_limited(0,sigma,2*sigma)
                 # small_r = dicct.small_r + BaseUtils.Random.uniformly_distribution(5*MM,-5*MM)
-                small_r = dicct.small_r - 3*MM
+                # small_r = dicct.small_r - 3*MM
             ))
         bls.append(bl)
 
