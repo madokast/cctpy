@@ -1921,7 +1921,8 @@ class GPU_ACCELERATOR:
                     p = cps,
                     m = bl,
                     length = distance,
-                    footstep = footstep
+                    footstep = footstep,
+                    concurrency_level=None
                 )
                 ret.append(cps)
             return ret

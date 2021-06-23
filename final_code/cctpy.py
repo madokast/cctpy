@@ -19,7 +19,7 @@ import warnings  # 提醒方法过时
 
 
 
-from packages.constants import M, MM, LIGHT_SPEED, RAD, MRAD, J, eV, MeV, MeV_PER_C, T
+from packages.constants import M, MM, LIGHT_SPEED, RAD, MRAD, J, eV, MeV, MeV_PER_C, T, V
 from packages.base_utils import BaseUtils
 from packages.point import P2, P3, ValueWithDistance
 from packages.local_coordinate_system import LocalCoordinateSystem
