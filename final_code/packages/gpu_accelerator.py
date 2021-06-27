@@ -41,7 +41,6 @@ try:
     import pycuda.driver as drv
     from pycuda.compiler import SourceModule
 except ModuleNotFoundError as e:
-    print("未安装 pycuda，GPU 加速功能将以 CPU 模式运行")
     __CPU_MODE__ = True
 
 
@@ -84,7 +83,9 @@ class GPU_ACCELERATOR:
         self.max_current_element_number = int(max_current_element_number)
         self.max_qs_datas_length = int(max_qs_datas_length)
         self.cpu_mode:bool = __CPU_MODE__ or cpu_mode # 只要两者中有一个为 True 则采用 cpu 模式
-        if self.cpu_mode:
+        if __CPU_MODE__:
+            print("未安装 pycuda，GPU 加速功能将以 CPU 模式运行")
+        elif self.cpu_mode:
             print("GPU 加速功能将以 CPU 模式运行")
 
         # 检查 block_dim_x 合法性

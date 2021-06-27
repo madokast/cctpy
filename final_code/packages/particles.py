@@ -1241,6 +1241,77 @@ class PhaseSpaceParticle:
         """
         return self.delta
 
+    def get_length(self) -> float:
+        """
+        求像空间中，粒子到原点（理想粒子的距离）
+
+        since 2021年6月27日
+        """
+        return math.sqrt(
+            self.x**2 + 
+            self.xp**2 + 
+            self.y**2 + 
+            self.yp**2 + 
+            self.z**2 + 
+            self.delta**2 
+        )
+
+    def dominate(self, other: 'PhaseSpaceParticle') -> bool:
+        """
+        p1.dominate(p2) 判断 p1 是否支配 p2
+        支配的含义是 p1 的每个值都不小于 p2
+
+        since 2021年6月27日
+        """
+
+
+        count = 0
+
+        if self.x > other.x :
+            count += 1
+        elif self.x < other.x:
+            return False
+
+        if self.xp > other.xp :
+            count += 1
+        elif self.xp < other.xp:
+            return False
+
+        if self.y > other.y :
+            count += 1
+        elif self.y < other.y:
+            return False
+
+        if self.yp > other.yp :
+            count += 1
+        elif self.yp < other.yp:
+            return False
+
+        if self.z > other.z :
+            count += 1
+        elif self.z < other.z:
+            return False
+
+        if self.delta > other.delta :
+            count += 1
+        elif self.delta < other.delta:
+            return False
+
+        return count != 0
+
+
+        
+
+        # 错误写法
+        # return (
+        #     self.x >= other.x and 
+        #     self.xp >= other.xp and 
+        #     self.y >= other.y and 
+        #     self.yp >= other.yp and 
+        #     self.z >= other.z and 
+        #     self.delta >= other.delta
+        # )
+
 
 class ParticleFactory:
     """
@@ -1383,6 +1454,9 @@ class ParticleFactory:
     DISTRIBUTION_AREA_EDGE = 1
     DISTRIBUTION_AREA_FULL = 2
 
+    DISTRIBUTION_TYPE_GAUSS = "gauss"
+    DISTRIBUTION_TYPE_UNIFORM = "uniform"
+
     @classmethod
     def distributed_particles(cls, x: float, xp: float, y: float, yp: float, delta: float, number: int,
                               distribution_area: int,
@@ -1453,7 +1527,7 @@ class ParticleFactory:
 
         distribution: List[List[float]] = None
 
-        if distribution_type == "uniform":
+        if distribution_type == cls.DISTRIBUTION_TYPE_UNIFORM:
             if distribution_area == cls.DISTRIBUTION_AREA_EDGE:
                 # 边缘分布
                 if dim == 1:
@@ -1507,7 +1581,7 @@ class ParticleFactory:
                     ]
             else:
                 raise ValueError("分布区域仅支持边缘分布和全分布")
-        elif distribution_type == "gauss":
+        elif distribution_type == cls.DISTRIBUTION_TYPE_GAUSS:
             if distribution_area == cls.DISTRIBUTION_AREA_EDGE:
                 raise ValueError("高斯分布下不支持边缘分布")
             elif distribution_area == cls.DISTRIBUTION_AREA_FULL:
