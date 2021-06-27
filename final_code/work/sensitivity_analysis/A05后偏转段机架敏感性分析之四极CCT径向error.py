@@ -78,7 +78,7 @@ if __name__ == '__main__':
             if BaseUtils.equal(30,abs(cct.tilt_angles[0])):
                 diccts.extend(CCT.cut_to_single_winding_cct(cct))
             elif BaseUtils.equal(30,abs(cct.tilt_angles[1])):
-                quccts.append(cct)
+                quccts.append(CCT.cut_to_single_winding_cct(cct))
             else:
                 raise ValueError(f"无法区分CCT是二极还是四极，cct=\n{cct}")
         else:
