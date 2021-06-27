@@ -10,8 +10,8 @@ sys.path.append(path.dirname(path.dirname(
 from cctpy import *
 
 
-# COSY_MAP:str = COSY_MAP_手动优化至伪二阶
-COSY_MAP:str = COSY_MAP_廖益诚五阶光学优化
+COSY_MAP:str = COSY_MAP_手动优化至伪二阶
+# COSY_MAP:str = COSY_MAP_廖益诚五阶光学优化
 
 map = CosyMap(COSY_MAP)
 

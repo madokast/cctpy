@@ -1694,7 +1694,8 @@ class GPU_ACCELERATOR:
             ps[i].populate(
                 RunningParticle.from_numpy_array_data(particles_all[i]))
 
-    def track_multi_particle_for_magnet_with_multi_qs(self, bl: Beamline, ps: List[RunningParticle], distance: float, footstep: float):
+    def track_multi_particle_for_magnet_with_multi_qs(
+        self, bl: Beamline, ps: List[RunningParticle], distance: float, footstep: float):
         """
         多粒子跟踪，电流元 + 多个 QS
 
@@ -1921,7 +1922,8 @@ class GPU_ACCELERATOR:
                     p = cps,
                     m = bl,
                     length = distance,
-                    footstep = footstep
+                    footstep = footstep,
+                    concurrency_level=None
                 )
                 ret.append(cps)
             return ret
