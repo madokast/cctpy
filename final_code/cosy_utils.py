@@ -194,7 +194,7 @@ class SR:
     COLOR_WHITE = 10
 
     @classmethod
-    def to_cosy_sr(cls, phase_space_particle: Union[PhaseSpaceParticle, List[PhaseSpaceParticle]], color: int = COLOR_BLUE) -> Union[str, List[str]]:
+    def to_cosy_sr(cls, phase_space_particle: Union[PhaseSpaceParticle, List[PhaseSpaceParticle]], color: int = COLOR_BLUE) -> str:
         """
         将相空间粒子 PhaseSpaceParticle 转为 COSY 脚本 SR < x > < xp > < y > < yp > <T> <dp> <G> <Z> <color> ;
 

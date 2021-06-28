@@ -12,11 +12,11 @@ from cctpy import *
 
 
 delta = 0.05
-ids:List[int] =[1]*200
+ids:List[int] =[1]*1
 sigma = 0.5*MM
 
 if __name__ == '__main__':
-    for sigma in BaseUtils.linspace(0.9*MM,1*MM,2):
+    for sigma in BaseUtils.linspace(-0.5*MM,0.5*MM,11):
 
         BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
         timer = BaseUtils.Timer()
@@ -92,17 +92,18 @@ if __name__ == '__main__':
         for id_ in ids:
             bl = Beamline(trajectory=bl0.get_trajectory())
             bl.magnets = []
-            bl.magnets.extend(diccts)
+            bl.magnets.extend(quccts)
             bl.magnets.extend(other_magnets)
 
-            for qucct in quccts:
+            for dicct in diccts:
+                # error = BaseUtils.Random.uniformly_distribution(sigma,-sigma)
+                error = sigma
                 bl.magnets.append(CCT.create_by_existing_cct(
-                    existing_cct=qucct,
-                    # ---------------------------------------------------------------------------
-                    # small_r = qucct.small_r + BaseUtils.Random.gauss_limited(0,0.05*MM,0.1*MM)
-                    small_r = qucct.small_r + BaseUtils.Random.uniformly_distribution(sigma,-sigma)
-                    # small_r = qucct.small_r + sigma
-                    # ---------------------------------------------------------------------------
+                    existing_cct=dicct,
+                    starting_point_in_ksi_phi_coordinate = 
+                    dicct.starting_point_in_ksi_phi_coordinate + P2(y = error / 0.95),
+                        end_point_in_ksi_phi_coordinate = 
+                    dicct.end_point_in_ksi_phi_coordinate + P2(y = error / 0.95)
                 ))
             bls.append(bl)
 
