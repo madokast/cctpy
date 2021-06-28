@@ -439,7 +439,9 @@ class BaseUtils:
             # 这个分支不应该进入
             print("警告：")
             print("检测到子进程执行 submit_process_task 函数")
-            print("这可能导致异常")
+            print("这可能导致异常，已自动终止这一行为")
+            print("如果 submit_process_task 需要在子进程中执行，请传入参数")
+            print("i_want_to_create_process_pool_in_child_process = True")
 
     class Ellipse:
         """

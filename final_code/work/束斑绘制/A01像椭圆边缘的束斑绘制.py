@@ -5,6 +5,7 @@
 
 from os import error, path
 import sys
+from typing import Set
 sys.path.append(path.dirname(path.abspath(path.dirname(__file__))))
 sys.path.append(path.dirname(path.dirname(
     path.abspath(path.dirname(__file__)))))
@@ -94,7 +95,7 @@ if __name__ == '__main__':
             delta = 0.0
         ))
 
-    to_be_removed:set[PhaseSpaceParticle] = set()
+    to_be_removed:Set[PhaseSpaceParticle] = set()
 
     for i in range(len(ps)):
         pi = ps[i]
