@@ -583,6 +583,8 @@ class ParticleRunner:
         refactor v0.1.1 使用 runge kutta 和 加入多进程支持
         """
         if isinstance(p, RunningParticle):
+            if report:
+                print("start run")
             dt = footstep / p.speed
             t_end = length / p.speed
             Y0 = numpy.array([p.position, p.velocity])
@@ -593,6 +595,8 @@ class ParticleRunner:
             p.position = Y1[0]
             p.velocity = Y1[1]
             p.distance += length
+            if report:
+                print("end run")
             return p
         elif concurrency_level == 1:
             particle_number = len(p)
