@@ -70,14 +70,14 @@ if __name__ == '__main__':
     )
 
     ps_x = ParticleFactory.distributed_particles(
-        x = 3.5*MM/2, xp = 7.5*MRAD/2, y = 0, yp = 0, delta = 0,
+        x = 3.5*MM, xp = 7.5*MRAD, y = 0, yp = 0, delta = 0,
         number = particle_number, distribution_area = ParticleFactory.DISTRIBUTION_AREA_FULL, 
         x_distributed=True, xp_distributed=True,
         distribution_type = ParticleFactory.DISTRIBUTION_TYPE_UNIFORM
     )
 
     ps_y = ParticleFactory.distributed_particles(
-        x = 0, xp = 0, y = 3.5*MM/2, yp = 7.5*MRAD/2, delta = 0,
+        x = 0, xp = 0, y = 3.5*MM, yp = 7.5*MRAD, delta = 0,
         number = particle_number, distribution_area = ParticleFactory.DISTRIBUTION_AREA_FULL, 
         y_distributed=True, yp_distributed=True,
         distribution_type = ParticleFactory.DISTRIBUTION_TYPE_UNIFORM
@@ -95,17 +95,17 @@ if __name__ == '__main__':
             delta = 0.0
         ))
 
-    to_be_removed:Set[PhaseSpaceParticle] = set()
+    # to_be_removed:Set[PhaseSpaceParticle] = set()
 
-    for i in range(len(ps)):
-        pi = ps[i]
-        for j in range(i,len(ps)):
-            pj = ps[j]
-            if pi.dominate(pj):
-                to_be_removed.add(pj)
+    # for i in range(len(ps)):
+    #     pi = ps[i]
+    #     for j in range(i,len(ps)):
+    #         pj = ps[j]
+    #         if pi.dominate(pj):
+    #             to_be_removed.add(pj)
 
-    for p in to_be_removed:
-        ps.remove(p)
+    # for p in to_be_removed:
+    #     ps.remove(p)
 
     print(f"去除非支配粒子后，len(ps) = {len(ps)}")
 
@@ -114,6 +114,8 @@ if __name__ == '__main__':
     BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
 
     for delta in BaseUtils.linspace(-0.07, 0.1, 18):
+
+        delta = 0.0
 
         for p in ps:
             p.delta = delta
@@ -124,7 +126,7 @@ if __name__ == '__main__':
             phase_space_particles = ps
         )
 
-        ParticleRunner.run_only(rps,bl,bl.get_length(),concurrency_level=16)
+        ParticleRunner.run_only(rps,bl,bl.get_length(),concurrency_level=16,footstep=200*MM)
 
         ps_end = PhaseSpaceParticle.create_from_running_particles(
             ideal_particle=ip_end,
@@ -135,6 +137,8 @@ if __name__ == '__main__':
         xy = [P2(pp.x, pp.y)/MM for pp in ps_end]
 
         Plot2.plot_p2s(xy,describe='ro')
+        Plot2.info("x/mm","y/mm")
+        Plot2.equal()
         Plot2.show()
 
         

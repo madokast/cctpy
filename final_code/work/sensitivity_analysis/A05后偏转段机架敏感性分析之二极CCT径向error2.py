@@ -16,7 +16,7 @@ ids:List[int] =[1]*200
 sigma = 0.5*MM
 
 if __name__ == '__main__':
-    for sigma in BaseUtils.linspace(0.9*MM,1*MM,2):
+    for sigma in BaseUtils.linspace(-0.5*MM,0.5*MM,11):
 
         BaseUtils.i_am_sure_my_code_closed_in_if_name_equal_main()
         timer = BaseUtils.Timer()
@@ -92,16 +92,16 @@ if __name__ == '__main__':
         for id_ in ids:
             bl = Beamline(trajectory=bl0.get_trajectory())
             bl.magnets = []
-            bl.magnets.extend(diccts)
+            bl.magnets.extend(quccts)
             bl.magnets.extend(other_magnets)
 
-            for qucct in quccts:
+            for dicct in diccts:
                 bl.magnets.append(CCT.create_by_existing_cct(
-                    existing_cct=qucct,
+                    existing_cct=dicct,
                     # ---------------------------------------------------------------------------
                     # small_r = qucct.small_r + BaseUtils.Random.gauss_limited(0,0.05*MM,0.1*MM)
-                    small_r = qucct.small_r + BaseUtils.Random.uniformly_distribution(sigma,-sigma)
-                    # small_r = qucct.small_r + sigma
+                    # small_r = qucct.small_r + BaseUtils.Random.uniformly_distribution(sigma,-sigma)
+                    small_r = dicct.small_r + sigma
                     # ---------------------------------------------------------------------------
                 ))
             bls.append(bl)
