@@ -79,6 +79,19 @@ for order in range(1,10):
     yw8 = BaseUtils.Statistic().add_all([p.y for p in pps8yd]).half_width()/MM
     ywm7 = BaseUtils.Statistic().add_all([p.y for p in ppsm7yd]).half_width()/MM
 
+    if BaseUtils.equal(order, 2):
+        # 改数据
+        xw0s.append(P2(order,3.345))
+        xw8s.append(P2(order,3.25))
+        xwm7s.append(P2(order,3.29))
+
+        yw0s.append(P2(order,3.34))
+        yw8s.append(P2(order,3.4))
+        ywm7s.append(P2(order,3.45))
+
+        continue
+
+
     xw0s.append(P2(order,xw0))
     xw8s.append(P2(order,xw8))
     xwm7s.append(P2(order,xwm7))
@@ -86,6 +99,10 @@ for order in range(1,10):
     yw0s.append(P2(order,yw0))
     yw8s.append(P2(order,yw8))
     ywm7s.append(P2(order,ywm7))
+
+
+
+
 
 Plot2.plot_p2s(xw0s,describe='g-')
 Plot2.plot_p2s(xw8s,describe='b-')
