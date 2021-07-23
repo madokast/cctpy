@@ -101,6 +101,21 @@ for order in range(1,10):
     ywm7s.append(P2(order,ywm7))
 
 
+for xw0 in xw0s:
+    print(f"{xw0.x} {xw0.y}")
+
+for i in range(len(xw0s)):
+    xw0 = xw0s[i]
+    xw8 = xw8s[i]
+    xwm7 = xwm7s[i]
+
+    yw0 = yw0s[i]
+    yw8 = yw8s[i]
+    ywm7 = ywm7s[i]
+
+    print(f"{xw0.x} {xw0.y} {xw8.y} {xwm7.y} {yw0.y} {yw8.y} {ywm7.y}")
+
+
 
 
 
