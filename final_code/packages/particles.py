@@ -583,8 +583,6 @@ class ParticleRunner:
         refactor v0.1.1 使用 runge kutta 和 加入多进程支持
         """
         if isinstance(p, RunningParticle):
-            if report:
-                print("start run")
             dt = footstep / p.speed
             t_end = length / p.speed
             Y0 = numpy.array([p.position, p.velocity])
@@ -595,26 +593,26 @@ class ParticleRunner:
             p.position = Y1[0]
             p.velocity = Y1[1]
             p.distance += length
-            if report:
-                print("end run")
             return p
         elif concurrency_level == 1:
             particle_number = len(p)
-            print(f"track {particle_number} particles")
-            print("当前使用单线程进行粒子跟踪，如果函数支持多线程并行，推荐使用多线程")
+            if report:
+                print(f"track {particle_number} particles")
+                print("当前使用单线程进行粒子跟踪，如果函数支持多线程并行，推荐使用多线程")
             particle_index = 0
             start_time = time.time()
             for this_p in p:
-                ParticleRunner.run_only(this_p, m, length, footstep)
+                ParticleRunner.run_only(this_p, m, length, footstep, report)
                 particle_index += 1
                 if particle_index == 1:
                     time_run_one_particle = time.time() - start_time
-                    print(
-                        f"运行一个粒子需要{time_run_one_particle:.5f}秒，估计总耗时{time_run_one_particle * particle_number:.5f}秒")
-                print(
-                    '\b'*8 + f'{(particle_index / particle_number * 100):>6.2f}% ', end='', flush=True)
-            print(' finished')
-            print(f"实际用时{(time.time()-start_time):.5f}秒")
+                    if report:
+                        print(f"运行一个粒子需要{time_run_one_particle:.5f}秒，估计总耗时{time_run_one_particle * particle_number:.5f}秒")
+                if report:
+                    print('\b'*8 + f'{(particle_index / particle_number * 100):>6.2f}% ', end='', flush=True)
+            if report:
+                print(' finished')
+                print(f"实际用时{(time.time()-start_time):.5f}秒")
             return p
         else:
             results: List[RunningParticle] = BaseUtils.submit_process_task(
