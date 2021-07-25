@@ -5,9 +5,9 @@
 
 测试一 纯 python，单进程
 测试二 纯 python，多进程
-测试三 CUDA 单个流多处理器（stream Stream Multiprocessor）且每个处理器 1 个线程
-测试四 CUDA 单个流多处理器（stream Stream Multiprocessor）且每个处理器 1024 个线程
-测试五 CUDA 多个流多处理器（stream Stream Multiprocessor）且每个处理器 1024 个线程
+测试三 CUDA 单个流多处理器（stream Multiprocessor）且每个处理器 1 个线程
+测试四 CUDA 单个流多处理器（stream Multiprocessor）且每个处理器 1024 个线程
+测试五 CUDA 多个流多处理器（stream Multiprocessor）且每个处理器 1024 个线程
 """
 
 
@@ -22,11 +22,11 @@ from cctpy import *
 
 # -------------------------------------------- 配置区 -----------------------------------------
 #-----------测试开关，true 表示执行此次测试-------------------------
-测试一 = not True
+测试一 = True
 测试二 = True
-测试三 = not True
-测试四 = not True
-测试五 = not True
+测试三 = True
+测试四 = True
+测试五 = True
 # -----------------------------------------------------------------
 测试轮数 = 10
 footstep = 2*MM # 调整测试复杂度
